@@ -149,33 +149,53 @@ int main(int argc, char **argv) {
   // target_pose_pub.publish(target_pose);
 
   // Run the pose tracking in a new thread
-  std::thread move_to_pose_thread([&tracker, &lin_tol, &rot_tol] {
-    tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
-  });
+  // std::thread move_to_pose_thread([&tracker, &lin_tol, &rot_tol] {
+    // tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
+  // });
 
-  for (size_t i = 0; i < 500; ++i) {
-    // Modify the pose target a little bit each cycle
-    // This is a dynamic pose target
-    // target_pose.pose.position.z += 0.0004;
-    // target_pose.header.stamp = ros::Time::now();
-    // target_pose_pub.publish(target_pose);
+  // for (size_t i = 0; i < 500; ++i) {
+  //   // Modify the pose target a little bit each cycle
+  //   // This is a dynamic pose target
+  //   // target_pose.pose.position.z += 0.0004;
+  //   // target_pose.header.stamp = ros::Time::now();
+  //   // target_pose_pub.publish(target_pose);
 
-    loop_rate.sleep();
-  }
+  //   loop_rate.sleep();
+  // }
 
   // Make sure the tracker is stopped and clean up
   tracker.stopMotion();
-  move_to_pose_thread.join();
+  // move_to_pose_thread.join();
+
+  std::string gravity = "base_footprint";
+  std::string camera_link = "camera_left_link";
+  std::string target_frame = "r_temoto_end_effector";
+
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
+  static tf2_ros::TransformBroadcaster br;
+  geometry_msgs::TransformStamped cam_gravity_tf;
+  try{
+    cam_gravity_tf = tfBuffer.lookupTransform(camera_link, gravity, ros::Time(0), ros::Duration(1));
+    cam_gravity_tf.child_frame_id = "TEST_FRAME";
+    cam_gravity_tf.transform.translation.x = 0;
+    cam_gravity_tf.transform.translation.y = 0;
+    cam_gravity_tf.transform.translation.z = 0;
+    ROS_ERROR_STREAM(cam_gravity_tf);
+  }
+  catch (tf2::TransformException &ex){
+      ROS_ERROR("%s",ex.what());
+  }
 
   ros::ServiceClient client =
       nh.serviceClient<look_at_pose::LookAtPose>("/look_at_pose");
   geometry_msgs::PoseStamped init_cam_pose;
-  init_cam_pose.header.frame_id = "camera_left_link";
+  init_cam_pose.header.frame_id = camera_link;
   init_cam_pose.header.stamp = ros::Time::now();
   init_cam_pose.pose.orientation.w = 1;
 
   geometry_msgs::PoseStamped target_look_pose;
-  target_look_pose.header.frame_id = "camera_left_link";
+  target_look_pose.header.frame_id = camera_link;
   target_look_pose.header.stamp = ros::Time::now();
   target_look_pose.pose.position.x = 1;
   target_look_pose.pose.position.y = 1;
@@ -183,10 +203,7 @@ int main(int argc, char **argv) {
 
   geometry_msgs::Vector3Stamped up;
   up.vector.z = 1;
-  up.header.frame_id = "camera_left_link";
-
-  std::string gravity = "base_footprint";
-  std::string target_frame = "r_temoto_end_effector";
+  up.header.frame_id = camera_link;
 
   look_at_pose::LookAtPose serv_msg;
   serv_msg.request.initial_cam_pose = init_cam_pose;
@@ -201,7 +218,7 @@ int main(int argc, char **argv) {
   }
 
   while (ros::ok()) {
-
+    br.sendTransform(cam_gravity_tf);
     loop_rate.sleep();
   }
 

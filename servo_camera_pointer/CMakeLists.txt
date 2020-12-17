@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   moveit_servo
   std_srvs
-  tf
+  tf2
 )
 
 add_service_files(
