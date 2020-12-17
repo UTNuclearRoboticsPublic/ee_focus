@@ -3,10 +3,12 @@
 //      Project   : servo_camera_pointer
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
-//      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All rights reserved.
-//                
-//          All files within this directory are subject to the following, unless an alternative
-//          license is explicitly included within the text of each file.
+//      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All
+//      rights reserved.
+//
+//          All files within this directory are subject to the following, unless
+//          an alternative license is explicitly included within the text of
+//          each file.
 //
 //          This software and documentation constitute an unpublished work
 //          and contain valuable trade secrets and proprietary information
@@ -21,9 +23,10 @@
 //          THE SOFTWARE OR DOCUMENTATION. Under no circumstances shall the
 //          University be liable for incidental, special, indirect, direct or
 //          consequential damages or loss of profits, interruption of business,
-//          or related expenses which may arise from use of software or documentation,
-//          including but not limited to those resulting from defects in software
-//          and/or documentation, or loss or inaccuracy of data of any kind.
+//          or related expenses which may arise from use of software or
+//          documentation, including but not limited to those resulting from
+//          defects in software and/or documentation, or loss or inaccuracy of
+//          data of any kind.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
