@@ -35,8 +35,8 @@
 #include <ros/ros.h>
 #include <servo_camera_pointer/PointToPose.h>
 #include <std_srvs/Trigger.h>
-#include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
 
 namespace servo_camera_pointer {
 class CameraPointer {
