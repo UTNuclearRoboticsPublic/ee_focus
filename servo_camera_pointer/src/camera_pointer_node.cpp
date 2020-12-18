@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
   // Subscribe to servo status (and log it when it changes)
   StatusMonitor status_monitor(nh, "status");
 
-  Eigen::Vector3d lin_tol{0.01, 0.01, 0.01};
+  Eigen::Vector3d lin_tol{1, 1, 1};
   double rot_tol = 0.1;
 
   // Get the current EE transform
@@ -175,77 +175,16 @@ int main(int argc, char **argv) {
   tf2_ros::TransformListener tfListener(tfBuffer);
   static tf2_ros::TransformBroadcaster br;
   geometry_msgs::TransformStamped cam_to_gravity_tf, cam_to_target_tf;
-  try {
-    cam_to_gravity_tf = tfBuffer.lookupTransform(
-        camera_link, gravity_frame, ros::Time(0), ros::Duration(1));
-    cam_to_target_tf = tfBuffer.lookupTransform(camera_link, target_frame,
-                                                ros::Time(0), ros::Duration(1));
-  } catch (tf2::TransformException &ex) {
-    ROS_ERROR("%s", ex.what());
-  }
-
-  ROS_ERROR_STREAM(cam_to_target_tf);
-
-  Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w,
-                               cam_to_gravity_tf.transform.rotation.x,
-                               cam_to_gravity_tf.transform.rotation.y,
-                               cam_to_gravity_tf.transform.rotation.z);
-  Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
-
-  // look_at_pose inputs
-  // The "Up" vector is just the z-axis of the rotation
-  geometry_msgs::Vector3Stamped gravity;
-  gravity.header.frame_id = cam_to_gravity_tf.header.frame_id;
-  gravity.vector.x = R_gravity(0, 2);
-  gravity.vector.y = R_gravity(1, 2);
-  gravity.vector.z = R_gravity(2, 2);
 
   ros::ServiceClient client =
       nh.serviceClient<look_at_pose::LookAtPose>("/look_at_pose");
-
-  // Init pose is Identity with corret time and frame
-  geometry_msgs::PoseStamped init_cam_pose;
-  init_cam_pose.header.frame_id = camera_link;
-  init_cam_pose.header.stamp = ros::Time::now();
-  init_cam_pose.pose.orientation.w = 1;
-
-  // Target pose comes from transform we just looked up
-  geometry_msgs::PoseStamped target_look_pose;
-  target_look_pose.header.frame_id = cam_to_target_tf.header.frame_id;
-  target_look_pose.header.stamp = cam_to_target_tf.header.stamp;
-  target_look_pose.pose.position.x = cam_to_target_tf.transform.translation.x;
-  target_look_pose.pose.position.y = cam_to_target_tf.transform.translation.y;
-  target_look_pose.pose.position.z = cam_to_target_tf.transform.translation.z;
-  target_look_pose.pose.orientation = cam_to_target_tf.transform.rotation;
-
-  ROS_WARN_STREAM(target_look_pose);
-
-  look_at_pose::LookAtPose serv_msg;
-  serv_msg.request.initial_cam_pose = init_cam_pose;
-  serv_msg.request.target_pose = target_look_pose;
-  serv_msg.request.up = gravity;
-
   client.waitForExistence();
-  if (client.call(serv_msg)) {
-    ROS_ERROR_STREAM(serv_msg.response);
-  } else {
-    ROS_ERROR_STREAM("NO RESPONSE");
-  }
 
-  // Publish the transform
-  geometry_msgs::PoseStamped result_pose = serv_msg.response.new_cam_pose;
-  geometry_msgs::TransformStamped camera_pointing_tf;
-  camera_pointing_tf.header.frame_id = result_pose.header.frame_id;
-  camera_pointing_tf.child_frame_id = "CAMERA_NEW_POSE";
-  camera_pointing_tf.transform.translation.x = result_pose.pose.position.x;
-  camera_pointing_tf.transform.translation.y = result_pose.pose.position.y;
-  camera_pointing_tf.transform.translation.z = result_pose.pose.position.z;
-  camera_pointing_tf.transform.rotation = result_pose.pose.orientation;
-
-  // Here comes the main course... send the pose to Servo for execution
+  ros::ServiceClient drift_client =
+      nh.serviceClient<moveit_msgs::ChangeDriftDimensions>(
+          "change_drift_dimensions");
+  drift_client.waitForExistence();
   tracker.resetTargetPose();
-  result_pose.header.stamp = ros::Time::now();
-  target_pose_pub.publish(result_pose);
 
   // Run the pose tracking in a new thread
   std::thread move_to_pose_thread([&tracker, &lin_tol, &rot_tol] {
@@ -253,12 +192,94 @@ int main(int argc, char **argv) {
   });
 
   while (ros::ok()) {
-    // camera_pointing_tf.header.stamp = ros::Time::now();
-    // br.sendTransform(camera_pointing_tf);
+
+    try {
+      cam_to_gravity_tf = tfBuffer.lookupTransform(
+          camera_link, gravity_frame, ros::Time(0), ros::Duration(1));
+      cam_to_target_tf = tfBuffer.lookupTransform(
+          camera_link, target_frame, ros::Time(0), ros::Duration(1));
+    } catch (tf2::TransformException &ex) {
+      ROS_ERROR("%s", ex.what());
+    }
+
+    Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w,
+                                 cam_to_gravity_tf.transform.rotation.x,
+                                 cam_to_gravity_tf.transform.rotation.y,
+                                 cam_to_gravity_tf.transform.rotation.z);
+    Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
+
+    // look_at_pose inputs
+    // The "Up" vector is just the z-axis of the rotation
+    geometry_msgs::Vector3Stamped gravity;
+    gravity.header.frame_id = cam_to_gravity_tf.header.frame_id;
+    gravity.vector.x = R_gravity(0, 2);
+    gravity.vector.y = R_gravity(1, 2);
+    gravity.vector.z = R_gravity(2, 2);
+
+    // Init pose is Identity with corret time and frame
+    geometry_msgs::PoseStamped init_cam_pose;
+    init_cam_pose.header.frame_id = camera_link;
+    init_cam_pose.header.stamp = ros::Time::now();
+    init_cam_pose.pose.orientation.w = 1;
+
+    // Target pose comes from transform we just looked up
+    geometry_msgs::PoseStamped target_look_pose;
+    target_look_pose.header.frame_id = cam_to_target_tf.header.frame_id;
+    target_look_pose.header.stamp = cam_to_target_tf.header.stamp;
+    target_look_pose.pose.position.x = cam_to_target_tf.transform.translation.x;
+    target_look_pose.pose.position.y = cam_to_target_tf.transform.translation.y;
+    target_look_pose.pose.position.z = cam_to_target_tf.transform.translation.z;
+    target_look_pose.pose.orientation = cam_to_target_tf.transform.rotation;
+
+    look_at_pose::LookAtPose serv_msg;
+    serv_msg.request.initial_cam_pose = init_cam_pose;
+    serv_msg.request.target_pose = target_look_pose;
+    serv_msg.request.up = gravity;
+
+    if (!client.call(serv_msg)) {
+      ROS_ERROR_STREAM("NO RESPONSE: look_at_pose");
+    }
+
+    // Publish the transform
+    geometry_msgs::PoseStamped result_pose = serv_msg.response.new_cam_pose;
+    geometry_msgs::TransformStamped camera_pointing_tf;
+    camera_pointing_tf.header.frame_id = result_pose.header.frame_id;
+    camera_pointing_tf.child_frame_id = "CAMERA_NEW_POSE";
+    camera_pointing_tf.transform.translation.x = result_pose.pose.position.x;
+    camera_pointing_tf.transform.translation.y = result_pose.pose.position.y;
+    camera_pointing_tf.transform.translation.z = result_pose.pose.position.z;
+    camera_pointing_tf.transform.rotation = result_pose.pose.orientation;
+
+    // Here comes the main course... send the pose to Servo for execution
+    // First, set some drifty dimensions
+    moveit_msgs::ChangeDriftDimensions drift_serv;
+    drift_serv.request.drift_x_translation = true;
+    drift_serv.request.drift_y_translation = true;
+    drift_serv.request.drift_z_translation = true;
+    drift_serv.request.drift_x_rotation = false;
+    drift_serv.request.drift_y_rotation = false;
+    drift_serv.request.drift_z_rotation = false;
+
+    if (!drift_client.call(drift_serv)) {
+      ROS_ERROR_STREAM("NO RESPONSE: drift server");
+    }
+
+    // Send the pose
+    result_pose.header.stamp = ros::Time::now();
+    target_pose_pub.publish(result_pose);
+
     loop_rate.sleep();
   }
+
   move_to_pose_thread.join();
   tracker.stopMotion();
+
+  while (ros::ok()) {
+    // camera_pointing_tf.header.stamp = ros::Time::now();
+    // br.sendTransform(camera_pointing_tf);
+    ROS_ERROR_STREAM_THROTTLE(1, "IN MAIN WHILE LOOP");
+    loop_rate.sleep();
+  }
 
   return EXIT_SUCCESS;
 }
