@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
   // }
 
   // Make sure the tracker is stopped and clean up
-  tracker.stopMotion();
+  // tracker.stopMotion();
   // move_to_pose_thread.join();
 
   std::string gravity_frame = "base_footprint";
@@ -242,11 +242,23 @@ int main(int argc, char **argv) {
   camera_pointing_tf.transform.translation.z = result_pose.pose.position.z;
   camera_pointing_tf.transform.rotation = result_pose.pose.orientation;
 
+  // Here comes the main course... send the pose to Servo for execution
+  tracker.resetTargetPose();
+  result_pose.header.stamp = ros::Time::now();
+  target_pose_pub.publish(result_pose);
+
+  // Run the pose tracking in a new thread
+  std::thread move_to_pose_thread([&tracker, &lin_tol, &rot_tol] {
+    tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
+  });
+
   while (ros::ok()) {
-    camera_pointing_tf.header.stamp = ros::Time::now();
-    br.sendTransform(camera_pointing_tf);
+    // camera_pointing_tf.header.stamp = ros::Time::now();
+    // br.sendTransform(camera_pointing_tf);
     loop_rate.sleep();
   }
+  move_to_pose_thread.join();
+  tracker.stopMotion();
 
   return EXIT_SUCCESS;
 }
