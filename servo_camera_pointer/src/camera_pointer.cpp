@@ -52,6 +52,11 @@ CameraPointerPublisher::CameraPointerPublisher(ros::NodeHandle& nh, std::string 
   target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(publish_topic_name, 1 /* queue */, true /* latch */);
 }
 
+void CameraPointerPublisher::stop()
+{
+  continue_publishing_ = false;
+}
+
 void CameraPointerPublisher::start()
 {
   continue_publishing_ = true;

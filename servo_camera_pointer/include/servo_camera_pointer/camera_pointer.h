@@ -49,7 +49,13 @@ public:
   CameraPointerPublisher(ros::NodeHandle& nh, std::string camera_frame, std::string z_axis_up_frame,
                          std::string target_frame, double loop_rate, std::string look_pose_server_name,
                          std::string publish_topic_name);
-  ~CameraPointerPublisher();
+  ~CameraPointerPublisher(){};
+
+  /* \brief Starts the publisher indefinitely */
+  void start();
+
+  /* \brief Stops the publisher */
+  void stop();
 
 private:
   /** \brief Worker function that actually does the actions
@@ -63,9 +69,6 @@ private:
 
   /* \brief Service callback for stopping */
   void stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
-
-  /* \brief Starts the publisher indefinitely */
-  void start();
 
   // Server's to start and end camera pointing
   ros::ServiceServer start_pointing_server_;

@@ -103,181 +103,56 @@ int main(int argc, char** argv)
   // Create the pose tracker
   moveit_servo::PoseTracking tracker(nh, planning_scene_monitor);
 
-  // Make a publisher for sending pose commands
-  ros::Publisher target_pose_pub =
-      nh.advertise<geometry_msgs::PoseStamped>("target_pose", 1 /* queue */, true /* latch */);
-
   // Subscribe to servo status (and log it when it changes)
   StatusMonitor status_monitor(nh, "status");
 
+  // Tolerances for pose tracking - don't care about linear positions
   Eigen::Vector3d lin_tol{ 1, 1, 1 };
   double rot_tol = 0.1;
 
-  // Get the current EE transform
-  geometry_msgs::TransformStamped current_ee_tf;
-  tracker.getCommandFrameTransform(current_ee_tf);
+  // Hold on to a bunch of frame names etc
+  std::string gravity_frame = "base_footprint";
+  std::string camera_link = "camera_left_link";
+  std::string target_frame = "r_temoto_end_effector";
+  std::string look_pose_server_name = "/look_at_pose";
+  std::string pose_publisher_topic = "target_pose";
 
-  // Convert it to a Pose
-  geometry_msgs::PoseStamped target_pose;
-  target_pose.header.frame_id = current_ee_tf.header.frame_id;
-  target_pose.pose.position.x = current_ee_tf.transform.translation.x;
-  target_pose.pose.position.y = current_ee_tf.transform.translation.y;
-  target_pose.pose.position.z = current_ee_tf.transform.translation.z;
-  target_pose.pose.orientation = current_ee_tf.transform.rotation;
+  // Create pose publisher
+  servo_camera_pointer::CameraPointerPublisher pose_publisher(nh, camera_link, gravity_frame, target_frame, 50,
+                                                              look_pose_server_name, pose_publisher_topic);
 
-  // Modify it a little bit
-  target_pose.pose.position.x += 0.1;
+  // Set up the drift dimension client for Servo
+  ros::ServiceClient drift_client = nh.serviceClient<moveit_msgs::ChangeDriftDimensions>("change_drift_dimensions");
+  drift_client.waitForExistence();
 
-  ros::Rate loop_rate(50);
-  for (size_t i = 0; i < 500; ++i)
+  // Make all linear dimensions drift
+  moveit_msgs::ChangeDriftDimensions drift_serv;
+  drift_serv.request.drift_x_translation = true;
+  drift_serv.request.drift_y_translation = true;
+  drift_serv.request.drift_z_translation = true;
+  drift_serv.request.drift_x_rotation = false;
+  drift_serv.request.drift_y_rotation = false;
+  drift_serv.request.drift_z_rotation = false;
+
+  if (!drift_client.call(drift_serv))
   {
-    // Modify the pose target a little bit each cycle
-    // This is a dynamic pose target
-    // target_pose.pose.position.z += 0.0004;
-    // target_pose.header.stamp = ros::Time::now();
-    // target_pose_pub.publish(target_pose);
-
-    loop_rate.sleep();
+    ROS_ERROR_STREAM("NO RESPONSE FROM: drift server");
   }
 
   // resetTargetPose() can be used to clear the target pose and wait for a new
   // one, e.g. when moving between multiple waypoints
   tracker.resetTargetPose();
 
-  // Publish target pose
-  target_pose.header.stamp = ros::Time::now();
-  // target_pose_pub.publish(target_pose);
+  // Start the publisher in a new thread
+  std::thread publish_target_thread([&pose_publisher] { pose_publisher.start(); });
 
-  // Run the pose tracking in a new thread
-  // std::thread move_to_pose_thread([&tracker, &lin_tol, &rot_tol] {
-  // tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
-  // });
+  // Call Servo to move, this blocks until returning
+  moveit_servo::PoseTrackingStatusCode result = tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
 
-  // for (size_t i = 0; i < 500; ++i) {
-  //   // Modify the pose target a little bit each cycle
-  //   // This is a dynamic pose target
-  //   // target_pose.pose.position.z += 0.0004;
-  //   // target_pose.header.stamp = ros::Time::now();
-  //   // target_pose_pub.publish(target_pose);
-
-  //   loop_rate.sleep();
-  // }
-
-  // Make sure the tracker is stopped and clean up
-  // tracker.stopMotion();
-  // move_to_pose_thread.join();
-
-  std::string gravity_frame = "base_footprint";
-  std::string camera_link = "camera_left_link";
-  std::string target_frame = "r_temoto_end_effector";
-
-  tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
-  static tf2_ros::TransformBroadcaster br;
-  geometry_msgs::TransformStamped cam_to_gravity_tf, cam_to_target_tf;
-
-  ros::ServiceClient client = nh.serviceClient<look_at_pose::LookAtPose>("/look_at_pose");
-  client.waitForExistence();
-
-  ros::ServiceClient drift_client = nh.serviceClient<moveit_msgs::ChangeDriftDimensions>("change_drift_dimensions");
-  drift_client.waitForExistence();
-  tracker.resetTargetPose();
-
-  // Run the pose tracking in a new thread
-  std::thread move_to_pose_thread(
-      [&tracker, &lin_tol, &rot_tol] { tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */); });
-
-  while (ros::ok())
-  {
-    try
-    {
-      cam_to_gravity_tf = tfBuffer.lookupTransform(camera_link, gravity_frame, ros::Time(0), ros::Duration(1));
-      cam_to_target_tf = tfBuffer.lookupTransform(camera_link, target_frame, ros::Time(0), ros::Duration(1));
-    }
-    catch (tf2::TransformException& ex)
-    {
-      ROS_ERROR("%s", ex.what());
-    }
-
-    Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w, cam_to_gravity_tf.transform.rotation.x,
-                                 cam_to_gravity_tf.transform.rotation.y, cam_to_gravity_tf.transform.rotation.z);
-    Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
-
-    // look_at_pose inputs
-    // The "Up" vector is just the z-axis of the rotation
-    geometry_msgs::Vector3Stamped gravity;
-    gravity.header.frame_id = cam_to_gravity_tf.header.frame_id;
-    gravity.vector.x = R_gravity(0, 2);
-    gravity.vector.y = R_gravity(1, 2);
-    gravity.vector.z = R_gravity(2, 2);
-
-    // Init pose is Identity with corret time and frame
-    geometry_msgs::PoseStamped init_cam_pose;
-    init_cam_pose.header.frame_id = camera_link;
-    init_cam_pose.header.stamp = ros::Time::now();
-    init_cam_pose.pose.orientation.w = 1;
-
-    // Target pose comes from transform we just looked up
-    geometry_msgs::PoseStamped target_look_pose;
-    target_look_pose.header.frame_id = cam_to_target_tf.header.frame_id;
-    target_look_pose.header.stamp = cam_to_target_tf.header.stamp;
-    target_look_pose.pose.position.x = cam_to_target_tf.transform.translation.x;
-    target_look_pose.pose.position.y = cam_to_target_tf.transform.translation.y;
-    target_look_pose.pose.position.z = cam_to_target_tf.transform.translation.z;
-    target_look_pose.pose.orientation = cam_to_target_tf.transform.rotation;
-
-    look_at_pose::LookAtPose serv_msg;
-    serv_msg.request.initial_cam_pose = init_cam_pose;
-    serv_msg.request.target_pose = target_look_pose;
-    serv_msg.request.up = gravity;
-
-    if (!client.call(serv_msg))
-    {
-      ROS_ERROR_STREAM("NO RESPONSE: look_at_pose");
-    }
-
-    // Publish the transform
-    geometry_msgs::PoseStamped result_pose = serv_msg.response.new_cam_pose;
-    geometry_msgs::TransformStamped camera_pointing_tf;
-    camera_pointing_tf.header.frame_id = result_pose.header.frame_id;
-    camera_pointing_tf.child_frame_id = "CAMERA_NEW_POSE";
-    camera_pointing_tf.transform.translation.x = result_pose.pose.position.x;
-    camera_pointing_tf.transform.translation.y = result_pose.pose.position.y;
-    camera_pointing_tf.transform.translation.z = result_pose.pose.position.z;
-    camera_pointing_tf.transform.rotation = result_pose.pose.orientation;
-
-    // Here comes the main course... send the pose to Servo for execution
-    // First, set some drifty dimensions
-    moveit_msgs::ChangeDriftDimensions drift_serv;
-    drift_serv.request.drift_x_translation = true;
-    drift_serv.request.drift_y_translation = true;
-    drift_serv.request.drift_z_translation = true;
-    drift_serv.request.drift_x_rotation = false;
-    drift_serv.request.drift_y_rotation = false;
-    drift_serv.request.drift_z_rotation = false;
-
-    if (!drift_client.call(drift_serv))
-    {
-      ROS_ERROR_STREAM("NO RESPONSE: drift server");
-    }
-
-    // Send the pose
-    result_pose.header.stamp = ros::Time::now();
-    target_pose_pub.publish(result_pose);
-
-    loop_rate.sleep();
-  }
-
-  move_to_pose_thread.join();
+  // Now stop the tracker and publisher, and clean up
   tracker.stopMotion();
-
-  while (ros::ok())
-  {
-    // camera_pointing_tf.header.stamp = ros::Time::now();
-    // br.sendTransform(camera_pointing_tf);
-    ROS_ERROR_STREAM_THROTTLE(1, "IN MAIN WHILE LOOP");
-    loop_rate.sleep();
-  }
+  pose_publisher.stop();
+  publish_target_thread.join();
 
   return EXIT_SUCCESS;
 }
