@@ -33,10 +33,10 @@
 #pragma once
 
 #include <atomic>
-#include <ros/ros.h>
 #include <look_at_pose/LookAtPose.h>
-#include <tf2_ros/transform_listener.h>
+#include <ros/ros.h>
 #include <tf2_eigen/tf2_eigen.h>
+#include <tf2_ros/transform_listener.h>
 
 namespace servo_camera_pointer
 {

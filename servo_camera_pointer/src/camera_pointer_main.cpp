@@ -1,6 +1,6 @@
 #include <servo_camera_pointer/camera_pointer.h>
 
-static const std::string LOGNAME = "camera_pointing";
+static const std::string LOGNAME = "camera_pointer_main";
 
 int main(int argc, char** argv)
 {

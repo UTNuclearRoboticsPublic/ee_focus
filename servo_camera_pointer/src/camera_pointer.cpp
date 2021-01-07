@@ -31,18 +31,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <servo_camera_pointer/camera_pointer.h>
-
-// int main(int argc, char **argv) {
-//   servo_camera_pointer::CameraPointer camera_pointer();
-//   return 0;
-// }
-
-#include <geometry_msgs/TransformStamped.h>
-#include <std_msgs/Int8.h>
 #include <stdexcept>
-#include <moveit_servo/make_shared_from_pool.h>
-#include <moveit_servo/status_codes.h>
-#include <thread>
 
 namespace servo_camera_pointer
 {
@@ -105,28 +94,27 @@ bool CameraPointer::stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Tr
 
 void CameraPointer::spin()
 {
+  Eigen::Vector3d lin_tol{ 1, 1, 1 };
+  double rot_tol = 0.1;
+
   while (ros::ok())
   {
     // Check if we need to change states
     if (!state_change_handled_)
     {
       if (continue_pointing_)
-      {
         start();
-      }
       else
-      {
         stop();
-      }
     }
 
     // If we want to be pointing, do so
-    Eigen::Vector3d lin_tol{ 1, 1, 1 };
-    double rot_tol = 0.1;
-
-    // Note that this line is blocking, so the stop CB needs to handle canceling this function by calling stopMotion()
-    // If the camera is already aligned this will end almost immediately and the while() here will run quickly
-    pose_tracking_->moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
+    if(continue_pointing_)
+    {
+      // Note that this line is blocking, so the stop CB needs to handle canceling this function by calling stopMotion()
+      // If the camera is already aligned this will end almost immediately and the while() here will run quickly
+      pose_tracking_->moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
+    }
 
     loop_rate_.sleep();
   }

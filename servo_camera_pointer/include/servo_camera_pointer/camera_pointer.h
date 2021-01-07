@@ -35,11 +35,11 @@
 #include <servo_camera_pointer/camera_pointer_publisher.h>
 
 #include <atomic>
-#include <ros/ros.h>
-#include <servo_camera_pointer/PointToPose.h>
-#include <std_srvs/Trigger.h>
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
+#include <ros/ros.h>
+#include <std_srvs/Trigger.h>
+#include <thread>
 
 namespace servo_camera_pointer
 {
@@ -74,11 +74,6 @@ private:
 
   // node handle
   ros::NodeHandle nh_;
-
-  // frame names for the frame to move and default "Up" frame
-  std::string camera_frame_;
-  std::string z_axis_up_frame_;
-  std::string target_frame_;
 
   // loop rate
   ros::Rate loop_rate_;
