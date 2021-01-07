@@ -34,10 +34,7 @@
 
 #include <atomic>
 #include <ros/ros.h>
-#include <servo_camera_pointer/PointToPose.h>
 #include <look_at_pose/LookAtPose.h>
-#include <std_srvs/Trigger.h>
-#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_eigen/tf2_eigen.h>
 
@@ -58,22 +55,6 @@ public:
   void stop();
 
 private:
-  /** \brief Worker function that actually does the actions
-   * @return true if the pose was reached or pointing started
-   */
-  bool sendPose();
-
-  /* \brief Service callback for starting */
-  void startPointingCB(servo_camera_pointer::PointToPose::Request& req,
-                       servo_camera_pointer::PointToPose::Response& res);
-
-  /* \brief Service callback for stopping */
-  void stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
-
-  // Server's to start and end camera pointing
-  ros::ServiceServer start_pointing_server_;
-  ros::ServiceServer stop_pointing_server_;
-
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;
 

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer_publisher.h
+//      Title     : camera_pointer.h
 //      Project   : servo_camera_pointer
-//      Created   : 12/15/2020
+//      Created   : 01/07/2020
 //      Author    : Adam Pettinger
 //      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All
 //      rights reserved.
@@ -32,60 +32,48 @@
 
 #pragma once
 
+#include <servo_camera_pointer/camera_pointer_publisher.h>
+
 #include <atomic>
 #include <ros/ros.h>
 #include <servo_camera_pointer/PointToPose.h>
-#include <look_at_pose/LookAtPose.h>
 #include <std_srvs/Trigger.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2_eigen/tf2_eigen.h>
+#include <moveit_servo/pose_tracking.h>
+#include <moveit_servo/servo.h>
 
 namespace servo_camera_pointer
 {
-class CameraPointerPublisher
+class CameraPointer
 {
 public:
-  CameraPointerPublisher(ros::NodeHandle& nh, std::string camera_frame, std::string z_axis_up_frame,
-                         std::string target_frame, double loop_rate, std::string look_pose_server_name,
-                         std::string publish_topic_name);
-  ~CameraPointerPublisher(){};
+  CameraPointer(ros::NodeHandle& nh, std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object);
+  ~CameraPointer(){};
 
-  /* \brief Starts the publisher indefinitely */
-  void start();
-
-  /* \brief Stops the publisher */
-  void stop();
+  /* \brief Main spinning loop for this class */
+  void spin();
 
 private:
-  /** \brief Worker function that actually does the actions
-   * @return true if the pose was reached or pointing started
-   */
-  bool sendPose();
+  /* \brief Does all the setup when we want to start pointing */
+  bool start();
+
+  /* \brief Does all shutdown when we want to stop pointing */
+  bool stop();
 
   /* \brief Service callback for starting */
-  void startPointingCB(servo_camera_pointer::PointToPose::Request& req,
-                       servo_camera_pointer::PointToPose::Response& res);
+  bool startPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
 
   /* \brief Service callback for stopping */
-  void stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
+  bool stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
 
   // Server's to start and end camera pointing
   ros::ServiceServer start_pointing_server_;
   ros::ServiceServer stop_pointing_server_;
 
-  // Server Client to use look at pose
-  ros::ServiceClient look_pose_client_;
-
-  // Publisher to send poses to Servo Pose Tracking
-  ros::Publisher target_pose_pub_;
+  // A client for changing the drift dimensions in Servo
+  ros::ServiceClient drift_dims_client_;
 
   // node handle
   ros::NodeHandle nh_;
-
-  // tf listener
-  tf2_ros::Buffer tf_buffer_;
-  tf2_ros::TransformListener tf_listener_;
 
   // frame names for the frame to move and default "Up" frame
   std::string camera_frame_;
@@ -96,6 +84,16 @@ private:
   ros::Rate loop_rate_;
 
   // Only continue publishing while this is true. Another thread can set this to false and stop publishing
-  std::atomic<bool> continue_publishing_{ false };
+  std::atomic<bool> continue_pointing_{ false };
+
+  // This atomic tracks our start/stop requests
+  std::atomic<bool> state_change_handled_{ false };
+
+  // Hold the pose tracking object here for using
+  std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
+
+  // Also hold the target pose publisher, and its thread for running in
+  std::unique_ptr<servo_camera_pointer::CameraPointerPublisher> target_pose_publisher_;
+  std::thread publish_target_thread_;
 };
 }  // namespace servo_camera_pointer

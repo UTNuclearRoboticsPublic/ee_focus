@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer_node.cpp
+//      Title     : camera_pointer.cpp
 //      Project   : servo_camera_pointer
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
@@ -30,7 +30,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <servo_camera_pointer/camera_pointer_publisher.h>
+#include <servo_camera_pointer/camera_pointer.h>
 
 // int main(int argc, char **argv) {
 //   servo_camera_pointer::CameraPointer camera_pointer();
@@ -39,10 +39,8 @@
 
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Int8.h>
-
+#include <stdexcept>
 #include <moveit_servo/make_shared_from_pool.h>
-#include <moveit_servo/pose_tracking.h>
-#include <moveit_servo/servo.h>
 #include <moveit_servo/status_codes.h>
 #include <thread>
 
@@ -71,6 +69,147 @@ private:
   moveit_servo::StatusCode status_ = moveit_servo::StatusCode::INVALID;
   ros::Subscriber sub_;
 };
+
+namespace servo_camera_pointer
+{
+CameraPointer::CameraPointer(ros::NodeHandle& nh, std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object)
+  : nh_(nh), loop_rate_(0)
+{
+  // Set up drift_dims_client_ client
+  drift_dims_client_ = nh_.serviceClient<moveit_msgs::ChangeDriftDimensions>("change_drift_dimensions");
+
+  // Set up the servers for starting/stopping the camera pointing
+  start_pointing_server_ = nh_.advertiseService(ros::names::append(nh_.getNamespace(), "start_camera_pointing"),
+                                                &CameraPointer::startPointingCB, this);
+  stop_pointing_server_ = nh_.advertiseService(ros::names::append(nh_.getNamespace(), "stop_camera_pointing"),
+                                               &CameraPointer::stopPointingCB, this);
+
+  // Read instance specific parameters
+  std::string camera_frame_name, z_axis_up_frame, target_frame, look_at_pose_server_name, target_pose_publish_topic;
+  double loop_rate;
+
+  if (!nh_.getParam("camera_frame_name", camera_frame_name))
+    throw std::invalid_argument("Could not load parameter: 'camera_frame_name'");
+  if (!nh_.getParam("gravity_frame_name", z_axis_up_frame))
+    throw std::invalid_argument("Could not load parameter: 'gravity_frame_name'");
+  if (!nh_.getParam("target_frame_name", target_frame))
+    throw std::invalid_argument("Could not load parameter: 'target_frame_name'");
+  if (!nh_.getParam("loop_rate", loop_rate))
+    throw std::invalid_argument("Could not load parameter: 'loop_rate'");
+  if (!nh_.getParam("look_at_pose_server_name", look_at_pose_server_name))
+    throw std::invalid_argument("Could not load parameter: 'look_at_pose_server_name'");
+  if (!nh_.getParam("target_pose_publish_topic", target_pose_publish_topic))
+    throw std::invalid_argument("Could not load parameter: 'target_pose_publish_topic'");
+
+  // Set up the target pose publisher
+  target_pose_publisher_ =
+      std::make_unique<servo_camera_pointer::CameraPointerPublisher>(nh_, camera_frame_name, z_axis_up_frame,
+                                                                     target_frame, loop_rate, look_at_pose_server_name,
+                                                                     target_pose_publish_topic);
+
+  // Set loop rate
+  loop_rate_ = ros::Rate(loop_rate);
+
+  // Steal the Pose Tracking instance
+  pose_tracking_ = std::move(pose_tracking_object);
+}
+
+bool CameraPointer::startPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res)
+{
+  continue_pointing_ = true;
+  state_change_handled_ = false;
+  return true;
+}
+
+bool CameraPointer::stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res)
+{
+  pose_tracking_->stopMotion();
+  continue_pointing_ = false;
+  state_change_handled_ = false;
+  return true;
+}
+
+void CameraPointer::spin()
+{
+  while (ros::ok())
+  {
+    // Check if we need to change states
+    if (!state_change_handled_)
+    {
+      if (continue_pointing_)
+      {
+        start();
+      }
+      else
+      {
+        stop();
+      }
+    }
+
+    // If we want to be pointing, do so
+    Eigen::Vector3d lin_tol{ 1, 1, 1 };
+    double rot_tol = 0.1;
+
+    // Note that this line is blocking, so the stop CB needs to handle canceling this function by calling stopMotion()
+    // If the camera is already aligned this will end almost immediately and the while() here will run quickly
+    pose_tracking_->moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
+
+    loop_rate_.sleep();
+  }
+}
+
+bool CameraPointer::start()
+{
+  // Make all linear dimensions drift
+  moveit_msgs::ChangeDriftDimensions drift_serv;
+  drift_serv.request.drift_x_translation = true;
+  drift_serv.request.drift_y_translation = true;
+  drift_serv.request.drift_z_translation = true;
+  drift_serv.request.drift_x_rotation = false;
+  drift_serv.request.drift_y_rotation = false;
+  drift_serv.request.drift_z_rotation = false;
+
+  if (!drift_dims_client_.call(drift_serv))
+  {
+    ROS_ERROR_STREAM("NO RESPONSE FROM: drift dimensions server");
+    return false;
+  }
+
+  pose_tracking_->resetTargetPose();
+
+  // Start the publisher
+  publish_target_thread_ = std::thread([this] { target_pose_publisher_->start(); });
+
+  state_change_handled_ = true;
+  return true;
+}
+
+bool CameraPointer::stop()
+{
+  // Reset all drift dimensions
+  moveit_msgs::ChangeDriftDimensions drift_serv;
+  drift_serv.request.drift_x_translation = false;
+  drift_serv.request.drift_y_translation = false;
+  drift_serv.request.drift_z_translation = false;
+  drift_serv.request.drift_x_rotation = false;
+  drift_serv.request.drift_y_rotation = false;
+  drift_serv.request.drift_z_rotation = false;
+
+  if (!drift_dims_client_.call(drift_serv))
+  {
+    ROS_ERROR_STREAM("NO RESPONSE FROM: drift dimensions server");
+    return false;
+  }
+
+  // Stop publishing
+  pose_tracking_->stopMotion();
+  target_pose_publisher_->stop();
+  publish_target_thread_.join();
+
+  state_change_handled_ = true;
+  return true;
+}
+}  // namespace servo_camera_pointer
 
 /**
  * Instantiate the pose tracking interface.
@@ -101,58 +240,13 @@ int main(int argc, char** argv)
   planning_scene_monitor->startStateMonitor();
 
   // Create the pose tracker
-  moveit_servo::PoseTracking tracker(nh, planning_scene_monitor);
+  auto tracker = std::make_unique<moveit_servo::PoseTracking>(nh, planning_scene_monitor);
 
   // Subscribe to servo status (and log it when it changes)
   StatusMonitor status_monitor(nh, "status");
 
-  // Tolerances for pose tracking - don't care about linear positions
-  Eigen::Vector3d lin_tol{ 1, 1, 1 };
-  double rot_tol = 0.1;
-
-  // Hold on to a bunch of frame names etc
-  std::string gravity_frame = "base_footprint";
-  std::string camera_link = "camera_left_link";
-  std::string target_frame = "r_temoto_end_effector";
-  std::string look_pose_server_name = "/look_at_pose";
-  std::string pose_publisher_topic = "target_pose";
-
-  // Create pose publisher
-  servo_camera_pointer::CameraPointerPublisher pose_publisher(nh, camera_link, gravity_frame, target_frame, 50,
-                                                              look_pose_server_name, pose_publisher_topic);
-
-  // Set up the drift dimension client for Servo
-  ros::ServiceClient drift_client = nh.serviceClient<moveit_msgs::ChangeDriftDimensions>("change_drift_dimensions");
-  drift_client.waitForExistence();
-
-  // Make all linear dimensions drift
-  moveit_msgs::ChangeDriftDimensions drift_serv;
-  drift_serv.request.drift_x_translation = true;
-  drift_serv.request.drift_y_translation = true;
-  drift_serv.request.drift_z_translation = true;
-  drift_serv.request.drift_x_rotation = false;
-  drift_serv.request.drift_y_rotation = false;
-  drift_serv.request.drift_z_rotation = false;
-
-  if (!drift_client.call(drift_serv))
-  {
-    ROS_ERROR_STREAM("NO RESPONSE FROM: drift server");
-  }
-
-  // resetTargetPose() can be used to clear the target pose and wait for a new
-  // one, e.g. when moving between multiple waypoints
-  tracker.resetTargetPose();
-
-  // Start the publisher in a new thread
-  std::thread publish_target_thread([&pose_publisher] { pose_publisher.start(); });
-
-  // Call Servo to move, this blocks until returning
-  moveit_servo::PoseTrackingStatusCode result = tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
-
-  // Now stop the tracker and publisher, and clean up
-  tracker.stopMotion();
-  pose_publisher.stop();
-  publish_target_thread.join();
+  servo_camera_pointer::CameraPointer camera_pointer(nh, std::move(tracker));
+  camera_pointer.spin();
 
   return EXIT_SUCCESS;
 }

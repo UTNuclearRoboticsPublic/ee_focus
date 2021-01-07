@@ -21,6 +21,8 @@
     <param name="gravity_frame_name" type="str" value="$(arg gravity_frame_name)" />
     <param name="target_frame_name" type="str" value="$(arg target_frame_name)" />
     <param name="loop_rate" type="double" value="$(arg loop_rate)" />
+    <param name="look_at_pose_server_name" type="double" value="$(arg look_at_pose_server_name)" />
+    <param name="target_pose_publish_topic" type="double" value="$(arg target_pose_publish_topic)" />
   </node>
 
 </launch>
