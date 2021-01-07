@@ -32,33 +32,30 @@
 
 #include <servo_camera_pointer/camera_pointer_publisher.h>
 
-namespace servo_camera_pointer
-{
-CameraPointerPublisher::CameraPointerPublisher(ros::NodeHandle& nh, std::string camera_frame,
-                                               std::string z_axis_up_frame, std::string target_frame, double loop_rate,
-                                               std::string look_pose_server_name, std::string publish_topic_name)
-  : nh_(nh)
-  , tf_buffer_()
-  , tf_listener_(tf_buffer_)
-  , camera_frame_(camera_frame)
-  , z_axis_up_frame_(z_axis_up_frame)
-  , target_frame_(target_frame)
-  , loop_rate_(loop_rate)
-{
+namespace servo_camera_pointer {
+CameraPointerPublisher::CameraPointerPublisher(
+    ros::NodeHandle& nh, std::string camera_frame, std::string z_axis_up_frame,
+    std::string target_frame, double loop_rate,
+    std::string look_pose_server_name, std::string publish_topic_name)
+    : nh_(nh),
+      tf_buffer_(),
+      tf_listener_(tf_buffer_),
+      camera_frame_(camera_frame),
+      z_axis_up_frame_(z_axis_up_frame),
+      target_frame_(target_frame),
+      loop_rate_(loop_rate) {
   // Set up look_at_pose client
-  look_pose_client_ = nh_.serviceClient<look_at_pose::LookAtPose>(look_pose_server_name);
+  look_pose_client_ =
+      nh_.serviceClient<look_at_pose::LookAtPose>(look_pose_server_name);
 
   // Set up the publisher. This publishes to Servo Pose Tracking
-  target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(publish_topic_name, 1 /* queue */, true /* latch */);
+  target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(
+      publish_topic_name, 1 /* queue */, true /* latch */);
 }
 
-void CameraPointerPublisher::stop()
-{
-  continue_publishing_ = false;
-}
+void CameraPointerPublisher::stop() { continue_publishing_ = false; }
 
-void CameraPointerPublisher::start()
-{
+void CameraPointerPublisher::start() {
   continue_publishing_ = true;
   geometry_msgs::TransformStamped cam_to_gravity_tf, cam_to_target_tf;
   geometry_msgs::Vector3Stamped gravity;
@@ -71,24 +68,24 @@ void CameraPointerPublisher::start()
   init_cam_pose.pose.orientation.w = 1;
 
   // Keep going until ROS dies or stop requested
-  while (ros::ok() && continue_publishing_)
-  {
+  while (ros::ok() && continue_publishing_) {
     // Look up the current transforms
-    try
-    {
-      cam_to_gravity_tf = tf_buffer_.lookupTransform(camera_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
-      cam_to_target_tf = tf_buffer_.lookupTransform(camera_frame_, target_frame_, ros::Time(0), ros::Duration(1));
-    }
-    catch (tf2::TransformException& ex)
-    {
+    try {
+      cam_to_gravity_tf = tf_buffer_.lookupTransform(
+          camera_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
+      cam_to_target_tf = tf_buffer_.lookupTransform(
+          camera_frame_, target_frame_, ros::Time(0), ros::Duration(1));
+    } catch (tf2::TransformException& ex) {
       ROS_ERROR_THROTTLE(1, "%s", ex.what());
       loop_rate_.sleep();
       continue;
     }
 
     // Convert the transform for the gravity frame to a rotation matrix
-    Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w, cam_to_gravity_tf.transform.rotation.x,
-                                 cam_to_gravity_tf.transform.rotation.y, cam_to_gravity_tf.transform.rotation.z);
+    Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w,
+                                 cam_to_gravity_tf.transform.rotation.x,
+                                 cam_to_gravity_tf.transform.rotation.y,
+                                 cam_to_gravity_tf.transform.rotation.z);
     Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
 
     // Populate gravity vector as the z-axis of rotation matrix
@@ -114,8 +111,7 @@ void CameraPointerPublisher::start()
     look_at_pose_service.request.up = gravity;
 
     // Call the look_at_pose service
-    if (!look_pose_client_.call(look_at_pose_service))
-    {
+    if (!look_pose_client_.call(look_at_pose_service)) {
       ROS_ERROR_STREAM_THROTTLE(1, "NO RESPONSE FROM: look_at_pose");
       loop_rate_.sleep();
       continue;

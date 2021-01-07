@@ -32,19 +32,19 @@
 
 #pragma once
 
-#include <atomic>
 #include <look_at_pose/LookAtPose.h>
 #include <ros/ros.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <tf2_ros/transform_listener.h>
 
-namespace servo_camera_pointer
-{
-class CameraPointerPublisher
-{
-public:
-  CameraPointerPublisher(ros::NodeHandle& nh, std::string camera_frame, std::string z_axis_up_frame,
-                         std::string target_frame, double loop_rate, std::string look_pose_server_name,
+#include <atomic>
+
+namespace servo_camera_pointer {
+class CameraPointerPublisher {
+ public:
+  CameraPointerPublisher(ros::NodeHandle& nh, std::string camera_frame,
+                         std::string z_axis_up_frame, std::string target_frame,
+                         double loop_rate, std::string look_pose_server_name,
                          std::string publish_topic_name);
   ~CameraPointerPublisher(){};
 
@@ -54,7 +54,7 @@ public:
   /* \brief Stops the publisher */
   void stop();
 
-private:
+ private:
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;
 
@@ -76,7 +76,8 @@ private:
   // loop rate
   ros::Rate loop_rate_;
 
-  // Only continue publishing while this is true. Another thread can set this to false and stop publishing
-  std::atomic<bool> continue_publishing_{ false };
+  // Only continue publishing while this is true. Another thread can set this to
+  // false and stop publishing
+  std::atomic<bool> continue_publishing_{false};
 };
 }  // namespace servo_camera_pointer

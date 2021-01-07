@@ -32,27 +32,27 @@
 
 #pragma once
 
-#include <servo_camera_pointer/camera_pointer_publisher.h>
-
-#include <atomic>
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
 #include <ros/ros.h>
+#include <servo_camera_pointer/camera_pointer_publisher.h>
 #include <std_srvs/Trigger.h>
+
+#include <atomic>
 #include <thread>
 
-namespace servo_camera_pointer
-{
-class CameraPointer
-{
-public:
-  CameraPointer(ros::NodeHandle& nh, std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object);
+namespace servo_camera_pointer {
+class CameraPointer {
+ public:
+  CameraPointer(
+      ros::NodeHandle& nh,
+      std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object);
   ~CameraPointer(){};
 
   /* \brief Main spinning loop for this class */
   void spin();
 
-private:
+ private:
   /* \brief Does all the setup when we want to start pointing */
   bool start();
 
@@ -60,10 +60,12 @@ private:
   bool stop();
 
   /* \brief Service callback for starting */
-  bool startPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
+  bool startPointingCB(std_srvs::Trigger::Request& req,
+                       std_srvs::Trigger::Response& res);
 
   /* \brief Service callback for stopping */
-  bool stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
+  bool stopPointingCB(std_srvs::Trigger::Request& req,
+                      std_srvs::Trigger::Response& res);
 
   // Server's to start and end camera pointing
   ros::ServiceServer start_pointing_server_;
@@ -78,17 +80,19 @@ private:
   // loop rate
   ros::Rate loop_rate_;
 
-  // Only continue publishing while this is true. Another thread can set this to false and stop publishing
-  std::atomic<bool> continue_pointing_{ false };
+  // Only continue publishing while this is true. Another thread can set this to
+  // false and stop publishing
+  std::atomic<bool> continue_pointing_{false};
 
   // This atomic tracks our start/stop requests
-  std::atomic<bool> state_change_handled_{ false };
+  std::atomic<bool> state_change_handled_{false};
 
   // Hold the pose tracking object here for using
   std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
 
   // Also hold the target pose publisher, and its thread for running in
-  std::unique_ptr<servo_camera_pointer::CameraPointerPublisher> target_pose_publisher_;
+  std::unique_ptr<servo_camera_pointer::CameraPointerPublisher>
+      target_pose_publisher_;
   std::thread publish_target_thread_;
 };
 }  // namespace servo_camera_pointer
