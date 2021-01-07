@@ -30,7 +30,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <servo_camera_pointer/camera_pointer.h>
+#include <servo_camera_pointer/camera_pointer_publisher.h>
 
 // int main(int argc, char **argv) {
 //   servo_camera_pointer::CameraPointer camera_pointer();

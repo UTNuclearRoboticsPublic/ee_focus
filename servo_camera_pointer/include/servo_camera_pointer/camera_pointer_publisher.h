@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer.h
+//      Title     : camera_pointer_publisher.h
 //      Project   : servo_camera_pointer
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger

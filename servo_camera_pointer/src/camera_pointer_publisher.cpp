@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer.cpp
+//      Title     : camera_pointer_publisher.cpp
 //      Project   : servo_camera_pointer
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
@@ -30,7 +30,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <servo_camera_pointer/camera_pointer.h>
+#include <servo_camera_pointer/camera_pointer_publisher.h>
 
 namespace servo_camera_pointer
 {
