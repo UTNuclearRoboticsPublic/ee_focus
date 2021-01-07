@@ -31,6 +31,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(camera_pointer src/camera_pointer.cpp src/camera_pointer_publisher.cpp)
+add_executable(camera_pointer src/camera_pointer_main.cpp src/camera_pointer.cpp src/camera_pointer_publisher.cpp)
 target_link_libraries(camera_pointer ${catkin_LIBRARIES})
 add_dependencies(camera_pointer ${catkin_EXPORTED_TARGETS})
