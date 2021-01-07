@@ -38,7 +38,6 @@
 // }
 
 #include <geometry_msgs/TransformStamped.h>
-#include <look_at_pose/LookAtPose.h>
 #include <std_msgs/Int8.h>
 
 #include <moveit_servo/make_shared_from_pool.h>
@@ -47,22 +46,25 @@
 #include <moveit_servo/status_codes.h>
 #include <thread>
 
-static const std::string LOGNAME = "cpp_interface_example";
+static const std::string LOGNAME = "camera_pointing";
 
 // Class for monitoring status of moveit_servo
-class StatusMonitor {
+class StatusMonitor
+{
 public:
-  StatusMonitor(ros::NodeHandle &nh, const std::string &topic) {
+  StatusMonitor(ros::NodeHandle& nh, const std::string& topic)
+  {
     sub_ = nh.subscribe(topic, 1, &StatusMonitor::statusCB, this);
   }
 
 private:
-  void statusCB(const std_msgs::Int8ConstPtr &msg) {
-    moveit_servo::StatusCode latest_status =
-        static_cast<moveit_servo::StatusCode>(msg->data);
-    if (latest_status != status_) {
+  void statusCB(const std_msgs::Int8ConstPtr& msg)
+  {
+    moveit_servo::StatusCode latest_status = static_cast<moveit_servo::StatusCode>(msg->data);
+    if (latest_status != status_)
+    {
       status_ = latest_status;
-      const auto &status_str = moveit_servo::SERVO_STATUS_CODE_MAP.at(status_);
+      const auto& status_str = moveit_servo::SERVO_STATUS_CODE_MAP.at(status_);
       ROS_INFO_STREAM_NAMED(LOGNAME, "Servo status: " << status_str);
     }
   }
@@ -75,7 +77,8 @@ private:
  * Send a pose slightly different from the starting pose
  * Then keep updating the target pose a little bit
  */
-int main(int argc, char **argv) {
+int main(int argc, char** argv)
+{
   ros::init(argc, argv, LOGNAME);
   ros::NodeHandle nh("~");
   ros::AsyncSpinner spinner(8);
@@ -83,21 +86,17 @@ int main(int argc, char **argv) {
 
   // Load the planning scene monitor
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor;
-  planning_scene_monitor =
-      std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(
-          "robot_description");
-  if (!planning_scene_monitor->getPlanningScene()) {
-    ROS_ERROR_STREAM_NAMED(LOGNAME,
-                           "Error in setting up the PlanningSceneMonitor.");
+  planning_scene_monitor = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
+  if (!planning_scene_monitor->getPlanningScene())
+  {
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "Error in setting up the PlanningSceneMonitor.");
     exit(EXIT_FAILURE);
   }
 
   planning_scene_monitor->startSceneMonitor();
   planning_scene_monitor->startWorldGeometryMonitor(
-      planning_scene_monitor::PlanningSceneMonitor::
-          DEFAULT_COLLISION_OBJECT_TOPIC,
-      planning_scene_monitor::PlanningSceneMonitor::
-          DEFAULT_PLANNING_SCENE_WORLD_TOPIC,
+      planning_scene_monitor::PlanningSceneMonitor::DEFAULT_COLLISION_OBJECT_TOPIC,
+      planning_scene_monitor::PlanningSceneMonitor::DEFAULT_PLANNING_SCENE_WORLD_TOPIC,
       false /* skip octomap monitor */);
   planning_scene_monitor->startStateMonitor();
 
@@ -105,13 +104,13 @@ int main(int argc, char **argv) {
   moveit_servo::PoseTracking tracker(nh, planning_scene_monitor);
 
   // Make a publisher for sending pose commands
-  ros::Publisher target_pose_pub = nh.advertise<geometry_msgs::PoseStamped>(
-      "target_pose", 1 /* queue */, true /* latch */);
+  ros::Publisher target_pose_pub =
+      nh.advertise<geometry_msgs::PoseStamped>("target_pose", 1 /* queue */, true /* latch */);
 
   // Subscribe to servo status (and log it when it changes)
   StatusMonitor status_monitor(nh, "status");
 
-  Eigen::Vector3d lin_tol{1, 1, 1};
+  Eigen::Vector3d lin_tol{ 1, 1, 1 };
   double rot_tol = 0.1;
 
   // Get the current EE transform
@@ -130,7 +129,8 @@ int main(int argc, char **argv) {
   target_pose.pose.position.x += 0.1;
 
   ros::Rate loop_rate(50);
-  for (size_t i = 0; i < 500; ++i) {
+  for (size_t i = 0; i < 500; ++i)
+  {
     // Modify the pose target a little bit each cycle
     // This is a dynamic pose target
     // target_pose.pose.position.z += 0.0004;
@@ -176,36 +176,31 @@ int main(int argc, char **argv) {
   static tf2_ros::TransformBroadcaster br;
   geometry_msgs::TransformStamped cam_to_gravity_tf, cam_to_target_tf;
 
-  ros::ServiceClient client =
-      nh.serviceClient<look_at_pose::LookAtPose>("/look_at_pose");
+  ros::ServiceClient client = nh.serviceClient<look_at_pose::LookAtPose>("/look_at_pose");
   client.waitForExistence();
 
-  ros::ServiceClient drift_client =
-      nh.serviceClient<moveit_msgs::ChangeDriftDimensions>(
-          "change_drift_dimensions");
+  ros::ServiceClient drift_client = nh.serviceClient<moveit_msgs::ChangeDriftDimensions>("change_drift_dimensions");
   drift_client.waitForExistence();
   tracker.resetTargetPose();
 
   // Run the pose tracking in a new thread
-  std::thread move_to_pose_thread([&tracker, &lin_tol, &rot_tol] {
-    tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */);
-  });
+  std::thread move_to_pose_thread(
+      [&tracker, &lin_tol, &rot_tol] { tracker.moveToPose(lin_tol, rot_tol, 0.1 /* target pose timeout */); });
 
-  while (ros::ok()) {
-
-    try {
-      cam_to_gravity_tf = tfBuffer.lookupTransform(
-          camera_link, gravity_frame, ros::Time(0), ros::Duration(1));
-      cam_to_target_tf = tfBuffer.lookupTransform(
-          camera_link, target_frame, ros::Time(0), ros::Duration(1));
-    } catch (tf2::TransformException &ex) {
+  while (ros::ok())
+  {
+    try
+    {
+      cam_to_gravity_tf = tfBuffer.lookupTransform(camera_link, gravity_frame, ros::Time(0), ros::Duration(1));
+      cam_to_target_tf = tfBuffer.lookupTransform(camera_link, target_frame, ros::Time(0), ros::Duration(1));
+    }
+    catch (tf2::TransformException& ex)
+    {
       ROS_ERROR("%s", ex.what());
     }
 
-    Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w,
-                                 cam_to_gravity_tf.transform.rotation.x,
-                                 cam_to_gravity_tf.transform.rotation.y,
-                                 cam_to_gravity_tf.transform.rotation.z);
+    Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w, cam_to_gravity_tf.transform.rotation.x,
+                                 cam_to_gravity_tf.transform.rotation.y, cam_to_gravity_tf.transform.rotation.z);
     Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
 
     // look_at_pose inputs
@@ -236,7 +231,8 @@ int main(int argc, char **argv) {
     serv_msg.request.target_pose = target_look_pose;
     serv_msg.request.up = gravity;
 
-    if (!client.call(serv_msg)) {
+    if (!client.call(serv_msg))
+    {
       ROS_ERROR_STREAM("NO RESPONSE: look_at_pose");
     }
 
@@ -260,7 +256,8 @@ int main(int argc, char **argv) {
     drift_serv.request.drift_y_rotation = false;
     drift_serv.request.drift_z_rotation = false;
 
-    if (!drift_client.call(drift_serv)) {
+    if (!drift_client.call(drift_serv))
+    {
       ROS_ERROR_STREAM("NO RESPONSE: drift server");
     }
 
@@ -274,7 +271,8 @@ int main(int argc, char **argv) {
   move_to_pose_thread.join();
   tracker.stopMotion();
 
-  while (ros::ok()) {
+  while (ros::ok())
+  {
     // camera_pointing_tf.header.stamp = ros::Time::now();
     // br.sendTransform(camera_pointing_tf);
     ROS_ERROR_STREAM_THROTTLE(1, "IN MAIN WHILE LOOP");

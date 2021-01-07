@@ -32,19 +32,24 @@
 
 #pragma once
 
+#include <atomic>
 #include <ros/ros.h>
 #include <servo_camera_pointer/PointToPose.h>
+#include <look_at_pose/LookAtPose.h>
 #include <std_srvs/Trigger.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_eigen/tf2_eigen.h>
 
-namespace servo_camera_pointer {
-class CameraPointer {
+namespace servo_camera_pointer
+{
+class CameraPointerPublisher
+{
 public:
-  CameraPointer(ros::NodeHandle &nh, std::string camera_frame,
-                std::string z_axis_up_frame, double loop_rate,
-                std::string look_pose_server_name);
-  ~CameraPointer();
+  CameraPointerPublisher(ros::NodeHandle& nh, std::string camera_frame, std::string z_axis_up_frame,
+                         std::string target_frame, double loop_rate, std::string look_pose_server_name,
+                         std::string publish_topic_name);
+  ~CameraPointerPublisher();
 
 private:
   /** \brief Worker function that actually does the actions
@@ -53,12 +58,14 @@ private:
   bool sendPose();
 
   /* \brief Service callback for starting */
-  void startPointingCB(servo_camera_pointer::PointToPose::Request &req,
-                       servo_camera_pointer::PointToPose::Response &res);
+  void startPointingCB(servo_camera_pointer::PointToPose::Request& req,
+                       servo_camera_pointer::PointToPose::Response& res);
 
   /* \brief Service callback for stopping */
-  void stopPointingCB(std_srvs::Trigger::Request &req,
-                      std_srvs::Trigger::Response &res);
+  void stopPointingCB(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
+
+  /* \brief Starts the publisher indefinitely */
+  void start();
 
   // Server's to start and end camera pointing
   ros::ServiceServer start_pointing_server_;
@@ -67,14 +74,25 @@ private:
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;
 
-  // tf listener
-  // tf2_ros::TransformListener tf_listener_;
+  // Publisher to send poses to Servo Pose Tracking
+  ros::Publisher target_pose_pub_;
 
   // node handle
   ros::NodeHandle nh_;
 
+  // tf listener
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
+
   // frame names for the frame to move and default "Up" frame
   std::string camera_frame_;
   std::string z_axis_up_frame_;
+  std::string target_frame_;
+
+  // loop rate
+  ros::Rate loop_rate_;
+
+  // Only continue publishing while this is true. Another thread can set this to false and stop publishing
+  std::atomic<bool> continue_publishing_{ false };
 };
-} // namespace servo_camera_pointer
+}  // namespace servo_camera_pointer
