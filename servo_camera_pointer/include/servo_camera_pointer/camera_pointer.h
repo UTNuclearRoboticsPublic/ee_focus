@@ -94,5 +94,9 @@ class CameraPointer {
   std::unique_ptr<servo_camera_pointer::CameraPointerPublisher>
       target_pose_publisher_;
   std::thread publish_target_thread_;
+
+  // Tolerances for when a move is "complete"
+  double rotational_tolerance_;
+  Eigen::Vector3d linear_tolerance_{1,1,1};
 };
 }  // namespace servo_camera_pointer

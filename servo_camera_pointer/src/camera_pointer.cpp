@@ -38,7 +38,7 @@ namespace servo_camera_pointer {
 CameraPointer::CameraPointer(
     ros::NodeHandle& nh,
     std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object)
-    : nh_(nh), loop_rate_(0) {
+    : nh_(nh), loop_rate_(0), rotational_tolerance_(0.0) {
   // Set up drift_dims_client_ client
   drift_dims_client_ = nh_.serviceClient<moveit_msgs::ChangeDriftDimensions>(
       "change_drift_dimensions");
@@ -74,6 +74,9 @@ CameraPointer::CameraPointer(
     throw std::invalid_argument(
         "Could not load parameter: 'target_pose_publish_topic'");
 
+  // 0.0 default = tracking doesn't stop until manually told to
+  nh_.param<double>("rotational_tolerance", rotational_tolerance_, 0.0);
+
   // Set up the target pose publisher
   target_pose_publisher_ =
       std::make_unique<servo_camera_pointer::CameraPointerPublisher>(
@@ -103,9 +106,6 @@ bool CameraPointer::stopPointingCB(std_srvs::Trigger::Request& req,
 }
 
 void CameraPointer::spin() {
-  Eigen::Vector3d lin_tol{1, 1, 1};
-  double rot_tol = 0.1;
-
   while (ros::ok()) {
     // Check if we need to change states
     if (!state_change_handled_) {
@@ -121,7 +121,7 @@ void CameraPointer::spin() {
       // canceling this function by calling stopMotion() If the camera is
       // already aligned this will end almost immediately and the while() here
       // will run quickly
-      pose_tracking_->moveToPose(lin_tol, rot_tol,
+      pose_tracking_->moveToPose(linear_tolerance_, rotational_tolerance_,
                                  0.1 /* target pose timeout */);
     }
 
