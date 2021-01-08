@@ -84,7 +84,7 @@ class CameraPointer {
   std::atomic<bool> continue_pointing_{false};
 
   // This atomic tracks our start/stop requests
-  std::atomic<bool> state_change_handled_{false};
+  std::atomic<bool> state_change_handled_{true};
 
   // Hold the pose tracking object here for using
   std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
