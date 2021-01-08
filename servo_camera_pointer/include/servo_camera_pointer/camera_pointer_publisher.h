@@ -38,6 +38,7 @@
 #include <tf2_ros/transform_listener.h>
 
 #include <atomic>
+#include <thread>
 
 namespace servo_camera_pointer {
 class CameraPointerPublisher {
@@ -55,6 +56,9 @@ class CameraPointerPublisher {
   void stop();
 
  private:
+  /* \brief Where most of the publishing work actually happens */
+  void mainPubLoop();
+
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;
 
@@ -79,5 +83,9 @@ class CameraPointerPublisher {
   // Only continue publishing while this is true. Another thread can set this to
   // false and stop publishing
   std::atomic<bool> continue_publishing_{false};
+
+  // Hold the thread we will run the main loop in - to avoid blocking whatever
+  // calls start()
+  std::thread thread_;
 };
 }  // namespace servo_camera_pointer

@@ -39,7 +39,6 @@
 #include <std_srvs/Trigger.h>
 
 #include <atomic>
-#include <thread>
 
 namespace servo_camera_pointer {
 class CameraPointer {
@@ -90,13 +89,12 @@ class CameraPointer {
   // Hold the pose tracking object here for using
   std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
 
-  // Also hold the target pose publisher, and its thread for running in
+  // Also hold the target pose publisher
   std::unique_ptr<servo_camera_pointer::CameraPointerPublisher>
       target_pose_publisher_;
-  std::thread publish_target_thread_;
 
   // Tolerances for when a move is "complete"
   double rotational_tolerance_;
-  Eigen::Vector3d linear_tolerance_{1,1,1};
+  Eigen::Vector3d linear_tolerance_{1, 1, 1};
 };
 }  // namespace servo_camera_pointer

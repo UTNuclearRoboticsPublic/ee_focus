@@ -53,10 +53,19 @@ CameraPointerPublisher::CameraPointerPublisher(
       publish_topic_name, 1 /* queue */, true /* latch */);
 }
 
-void CameraPointerPublisher::stop() { continue_publishing_ = false; }
+void CameraPointerPublisher::stop() {
+  continue_publishing_ = false;
+
+  if (thread_.joinable()) thread_.join();
+}
 
 void CameraPointerPublisher::start() {
   continue_publishing_ = true;
+
+  thread_ = std::thread([this] { mainPubLoop(); });
+}
+
+void CameraPointerPublisher::mainPubLoop() {
   geometry_msgs::TransformStamped cam_to_gravity_tf, cam_to_target_tf;
   geometry_msgs::Vector3Stamped gravity;
   geometry_msgs::PoseStamped init_cam_pose;

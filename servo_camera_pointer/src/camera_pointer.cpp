@@ -147,8 +147,7 @@ bool CameraPointer::start() {
   pose_tracking_->resetTargetPose();
 
   // Start the publisher
-  publish_target_thread_ =
-      std::thread([this] { target_pose_publisher_->start(); });
+  target_pose_publisher_->start();
 
   state_change_handled_ = true;
   return true;
@@ -172,7 +171,6 @@ bool CameraPointer::stop() {
   // Stop publishing
   pose_tracking_->stopMotion();
   target_pose_publisher_->stop();
-  publish_target_thread_.join();
 
   state_change_handled_ = true;
   return true;
