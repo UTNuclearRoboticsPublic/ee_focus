@@ -65,15 +65,11 @@ CameraPointer::CameraPointer(
   if (!nh_.getParam("target_frame_name", target_frame))
     throw std::invalid_argument(
         "Could not load parameter: 'target_frame_name'");
-  if (!nh_.getParam("loop_rate", loop_rate))
-    throw std::invalid_argument("Could not load parameter: 'loop_rate'");
-  if (!nh_.getParam("look_at_pose_server_name", look_at_pose_server_name))
-    throw std::invalid_argument(
-        "Could not load parameter: 'look_at_pose_server_name'");
-  if (!nh_.getParam("target_pose_publish_topic", target_pose_publish_topic))
-    throw std::invalid_argument(
-        "Could not load parameter: 'target_pose_publish_topic'");
 
+  nh_.param<double>("loop_rate", loop_rate, 50.0);
+  nh_.param<std::string>("look_at_pose_server_name", look_at_pose_server_name, "/look_at_pose");
+  nh_.param<std::string>("target_pose_publish_topic", target_pose_publish_topic, "target_pose");
+  
   // 0.0 default = tracking doesn't stop until manually told to
   nh_.param<double>("rotational_tolerance", rotational_tolerance_, 0.0);
 
