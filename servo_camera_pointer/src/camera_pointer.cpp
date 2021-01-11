@@ -69,7 +69,7 @@ CameraPointer::CameraPointer(
   nh_.param<double>("loop_rate", loop_rate, 50.0);
   nh_.param<std::string>("look_at_pose_server_name", look_at_pose_server_name, "/look_at_pose");
   nh_.param<std::string>("target_pose_publish_topic", target_pose_publish_topic, "target_pose");
-  
+
   // 0.0 default = tracking doesn't stop until manually told to
   nh_.param<double>("rotational_tolerance", rotational_tolerance_, 0.0);
 
@@ -90,6 +90,8 @@ bool CameraPointer::startPointingCB(std_srvs::Trigger::Request& req,
                                     std_srvs::Trigger::Response& res) {
   continue_pointing_ = true;
   state_change_handled_ = false;
+  res.success = true;
+  res.message = "Starting to point camera";
   return true;
 }
 
@@ -98,6 +100,8 @@ bool CameraPointer::stopPointingCB(std_srvs::Trigger::Request& req,
   pose_tracking_->stopMotion();
   continue_pointing_ = false;
   state_change_handled_ = false;
+  res.success = true;
+  res.message = "Stopping camera pointing";
   return true;
 }
 
