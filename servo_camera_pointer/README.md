@@ -22,5 +22,6 @@ To launch from another launch file:
     <arg name="gravity_frame_name" value="GRAVITY"/>
     <arg name="target_frame_name" value="TARGET"/>
     <arg name="loop_rate" value="LOOP_RATE"/>
+    <arg name="rotational_tolerance" value="0.05"/>
 </include>
 ```
