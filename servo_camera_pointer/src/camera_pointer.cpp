@@ -38,7 +38,7 @@ namespace servo_camera_pointer {
 CameraPointer::CameraPointer(
     ros::NodeHandle& nh,
     std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object)
-    : nh_(nh), loop_rate_(0), rotational_tolerance_(0.0) {
+    : nh_(nh), loop_rate_(1.0), rotational_tolerance_(0.0) {
   // Set up drift_dims_client_ client
   drift_dims_client_ = nh_.serviceClient<moveit_msgs::ChangeDriftDimensions>(
       "change_drift_dimensions");
@@ -127,6 +127,10 @@ void CameraPointer::spin() {
 
     loop_rate_.sleep();
   }
+
+  pose_tracking_->stopMotion();
+  target_pose_publisher_->stop();
+  return;
 }
 
 bool CameraPointer::start() {
