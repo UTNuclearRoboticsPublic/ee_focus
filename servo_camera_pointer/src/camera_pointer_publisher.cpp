@@ -53,6 +53,8 @@ CameraPointerPublisher::CameraPointerPublisher(
       publish_topic_name, 1 /* queue */, true /* latch */);
 }
 
+CameraPointerPublisher::~CameraPointerPublisher() { stop(); }
+
 void CameraPointerPublisher::stop() {
   continue_publishing_ = false;
 

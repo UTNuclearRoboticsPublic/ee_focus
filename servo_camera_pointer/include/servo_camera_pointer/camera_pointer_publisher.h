@@ -47,7 +47,7 @@ class CameraPointerPublisher {
                          std::string z_axis_up_frame, std::string target_frame,
                          double loop_rate, std::string look_pose_server_name,
                          std::string publish_topic_name);
-  ~CameraPointerPublisher(){};
+  ~CameraPointerPublisher();
 
   /* \brief Starts the publisher indefinitely */
   void start();
