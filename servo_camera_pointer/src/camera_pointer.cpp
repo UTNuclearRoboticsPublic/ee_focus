@@ -54,17 +54,16 @@ CameraPointer::CameraPointer(
       this);
 
   // Read instance specific parameters
-  std::string camera_frame_name, z_axis_up_frame, target_frame,
-      look_at_pose_server_name, target_pose_publish_topic;
+  std::string look_at_pose_server_name, target_pose_publish_topic;
   double loop_rate;
 
-  if (!nh_.getParam("camera_frame_name", camera_frame_name))
+  if (!nh_.getParam("camera_frame_name", camera_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'camera_frame_name'");
-  if (!nh_.getParam("gravity_frame_name", z_axis_up_frame))
+  if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'gravity_frame_name'");
-  if (!nh_.getParam("target_frame_name", target_frame))
+  if (!nh_.getParam("target_frame_name", target_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'target_frame_name'");
 
@@ -81,9 +80,9 @@ CameraPointer::CameraPointer(
   target_pose_publisher_ =
       std::make_unique<servo_camera_pointer::CameraPointerPublisher>(
           nh_,
-          camera_frame_name,
-          z_axis_up_frame,
-          target_frame,
+          camera_frame_,
+          z_axis_up_frame_,
+          target_frame_,
           loop_rate,
           look_at_pose_server_name,
           target_pose_publish_topic);
@@ -100,7 +99,8 @@ bool CameraPointer::startPointingCB(std_srvs::Trigger::Request& req,
   continue_pointing_ = true;
   state_change_handled_ = false;
   res.success = true;
-  res.message = "Starting to point camera";
+  res.message = std::string("Starting to point camera '") + camera_frame_ +
+                std::string("' at frame '") + target_frame_ + std::string("'.");
   return true;
 }
 
