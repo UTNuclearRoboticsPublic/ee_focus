@@ -34,9 +34,13 @@
 
 namespace servo_camera_pointer {
 CameraPointerPublisher::CameraPointerPublisher(
-    ros::NodeHandle& nh, std::string camera_frame, std::string z_axis_up_frame,
-    std::string target_frame, double loop_rate,
-    std::string look_pose_server_name, std::string publish_topic_name)
+    ros::NodeHandle& nh,
+    std::string camera_frame,
+    std::string z_axis_up_frame,
+    std::string target_frame,
+    double loop_rate,
+    std::string look_pose_server_name,
+    std::string publish_topic_name)
     : nh_(nh),
       tf_buffer_(),
       tf_listener_(tf_buffer_),
@@ -52,6 +56,8 @@ CameraPointerPublisher::CameraPointerPublisher(
   target_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(
       publish_topic_name, 1 /* queue */, true /* latch */);
 }
+
+CameraPointerPublisher::~CameraPointerPublisher() { stop(); }
 
 void CameraPointerPublisher::stop() {
   continue_publishing_ = false;

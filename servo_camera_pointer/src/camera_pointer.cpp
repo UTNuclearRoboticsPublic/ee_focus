@@ -46,33 +46,32 @@ CameraPointer::CameraPointer(
   // Set up the servers for starting/stopping the camera pointing
   start_pointing_server_ = nh_.advertiseService(
       ros::names::append(nh_.getNamespace(), "start_camera_pointing"),
-      &CameraPointer::startPointingCB, this);
+      &CameraPointer::startPointingCB,
+      this);
   stop_pointing_server_ = nh_.advertiseService(
       ros::names::append(nh_.getNamespace(), "stop_camera_pointing"),
-      &CameraPointer::stopPointingCB, this);
+      &CameraPointer::stopPointingCB,
+      this);
 
   // Read instance specific parameters
-  std::string camera_frame_name, z_axis_up_frame, target_frame,
-      look_at_pose_server_name, target_pose_publish_topic;
+  std::string look_at_pose_server_name, target_pose_publish_topic;
   double loop_rate;
 
-  if (!nh_.getParam("camera_frame_name", camera_frame_name))
+  if (!nh_.getParam("camera_frame_name", camera_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'camera_frame_name'");
-  if (!nh_.getParam("gravity_frame_name", z_axis_up_frame))
+  if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'gravity_frame_name'");
-  if (!nh_.getParam("target_frame_name", target_frame))
+  if (!nh_.getParam("target_frame_name", target_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'target_frame_name'");
-  if (!nh_.getParam("loop_rate", loop_rate))
-    throw std::invalid_argument("Could not load parameter: 'loop_rate'");
-  if (!nh_.getParam("look_at_pose_server_name", look_at_pose_server_name))
-    throw std::invalid_argument(
-        "Could not load parameter: 'look_at_pose_server_name'");
-  if (!nh_.getParam("target_pose_publish_topic", target_pose_publish_topic))
-    throw std::invalid_argument(
-        "Could not load parameter: 'target_pose_publish_topic'");
+
+  nh_.param<double>("loop_rate", loop_rate, 50.0);
+  nh_.param<std::string>(
+      "look_at_pose_server_name", look_at_pose_server_name, "/look_at_pose");
+  nh_.param<std::string>(
+      "target_pose_publish_topic", target_pose_publish_topic, "target_pose");
 
   // 0.0 default = tracking doesn't stop until manually told to
   nh_.param<double>("rotational_tolerance", rotational_tolerance_, 0.0);
@@ -80,8 +79,13 @@ CameraPointer::CameraPointer(
   // Set up the target pose publisher
   target_pose_publisher_ =
       std::make_unique<servo_camera_pointer::CameraPointerPublisher>(
-          nh_, camera_frame_name, z_axis_up_frame, target_frame, loop_rate,
-          look_at_pose_server_name, target_pose_publish_topic);
+          nh_,
+          camera_frame_,
+          z_axis_up_frame_,
+          target_frame_,
+          loop_rate,
+          look_at_pose_server_name,
+          target_pose_publish_topic);
 
   // Set loop rate
   loop_rate_ = ros::Rate(loop_rate);
@@ -94,6 +98,9 @@ bool CameraPointer::startPointingCB(std_srvs::Trigger::Request& req,
                                     std_srvs::Trigger::Response& res) {
   continue_pointing_ = true;
   state_change_handled_ = false;
+  res.success = true;
+  res.message = std::string("Starting to point camera '") + camera_frame_ +
+                std::string("' at frame '") + target_frame_ + std::string("'.");
   return true;
 }
 
@@ -102,6 +109,8 @@ bool CameraPointer::stopPointingCB(std_srvs::Trigger::Request& req,
   pose_tracking_->stopMotion();
   continue_pointing_ = false;
   state_change_handled_ = false;
+  res.success = true;
+  res.message = "Stopping camera pointing";
   return true;
 }
 
@@ -121,7 +130,8 @@ void CameraPointer::spin() {
       // canceling this function by calling stopMotion() If the camera is
       // already aligned this will end almost immediately and the while() here
       // will run quickly
-      pose_tracking_->moveToPose(linear_tolerance_, rotational_tolerance_,
+      pose_tracking_->moveToPose(linear_tolerance_,
+                                 rotational_tolerance_,
                                  0.1 /* target pose timeout */);
     }
 

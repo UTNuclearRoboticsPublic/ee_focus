@@ -22,5 +22,20 @@ To launch from another launch file:
     <arg name="gravity_frame_name" value="GRAVITY"/>
     <arg name="target_frame_name" value="TARGET"/>
     <arg name="loop_rate" value="LOOP_RATE"/>
+    <arg name="rotational_tolerance" value="0.05"/>
 </include>
 ```
+
+## Threading in this package
+The package must do a few things in parallel:
+  - Do all the math for figuring out the pose required to point the camera correctly (and publish the result)
+  - Run the pose tracking of MoveIt Servo - math for converting a pose to a velocity command
+  - Manage the I/O from ROS service callbacks
+  - Run MoveIt Servo (in the background, not managed here)
+
+There are 3 big objects/classes associated with these tasks:
+  1) MoveIt Servo Pose Tracking (not implemented here, just used)
+  2) `camera_pointer_publisher` - relatively small class doing transform math, using `look_at_pose` service, and publishing target poses for MoveIt Servo Pose Tracking to move to
+  3) `camera_pointer` - manages starting/stopping the Pose Tracking via ROS service, reading parameters, initializing things, etc
+
+The main thread of the executable will eventually be stuck in `CameraPointer::spin()`, which is managing the MoveIt Servo Pose Tracking object. Starting/stopping tracking is handled via service callbacks with `CameraPointer::startPointingCB` and `CameraPointer::stopPointingCB`. The `CameraPointerPublisher` object holds and manages its own thread where its math/publishing work will take place. Thus, when `CameraPointer` tells `CameraPointerPublisher` to start, the call returns instantly but kicks off a new thread with math/publishing work being done inside `CameraPointerPublisher`
