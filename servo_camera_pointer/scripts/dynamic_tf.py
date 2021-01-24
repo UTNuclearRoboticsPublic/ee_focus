@@ -1,5 +1,11 @@
 #!/bin/python3
 
+# __TODO__
+# Make sigint like handler to return terminal control
+# Make output only print on a single line
+# Make output print entire state
+# Make increment user configurable?
+
 import rospy
 import tf2_ros
 import geometry_msgs.msg
