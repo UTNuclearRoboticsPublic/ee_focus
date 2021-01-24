@@ -45,35 +45,12 @@ source devel/setup.bash
 # Demo
 Roughly following the instructions for the [Servo demo](https://github.com/ros-planning/moveit/tree/master/moveit_ros/moveit_servo).
 
-In 3 seperate terminals (sorry...)
+In one terminal run:
 ```sh
 source ~/ws_camera_pointing/devel/setup.bash
-roslaunch ur_gazebo ur5.launch gui:=false
+roslaunch servo_camera_pointer servo_camera_pointer_simulation.launch 
 ```
-
-```sh
-source ~/ws_camera_pointing/devel/setup.bash
-roslaunch ur5_moveit_config ur5_moveit_planning_execution.launch sim:=true
-```
-
-```sh
-source ~/ws_camera_pointing/devel/setup.bash
-roslaunch ur5_moveit_config moveit_rviz.launch config:=true
-```
-
-In RViz, plan-execute the arm to somewhere that is not singular. In yet a 4th terminal:
-```sh
-source ~/ws_camera_pointing/devel/setup.bash
-
-rosservice call /controller_manager/switch_controller "start_controllers:
-- 'joint_group_position_controller'
-stop_controllers:
-- 'arm_controller'
-strictness: 2"
-
-roslaunch servo_camera_pointer camera_pointer_demo.launch
-```
-In I promise the final terminal:
+In the second terminal:
 ```sh
 rosservice call /servo_camera_pointer/start_camera_pointing
 ```
