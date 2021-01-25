@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python
 
 # __TODO__
 # Make sigint like handler to return terminal control
