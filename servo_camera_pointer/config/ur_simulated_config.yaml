@@ -55,7 +55,7 @@ command_out_topic: /joint_group_position_controller/command # Publish outgoing c
 
 ## Collision checking for the entire robot body
 check_collisions: true # Check collisions?
-collision_check_rate: 50 # [Hz] Collision-checking can easily bog down a CPU if done too often.
+collision_check_rate: 10 # [Hz] Collision-checking can easily bog down a CPU if done too often.
 # Two collision check algorithms are available:
 # "threshold_distance" begins slowing down when nearer than a specified distance. Good if you want to tune collision thresholds manually.
 # "stop_distance" stops if a collision is nearer than the worst-case stopping distance and the distance is decreasing. Requires joint acceleration limits
