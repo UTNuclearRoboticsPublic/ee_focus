@@ -10,14 +10,7 @@
   <arg name="look_at_pose_server_name" default="/look_at_pose" />
   <arg name="target_pose_publish_topic" default="target_pose" />
 
-  <!-- SERVICE CALL TO SPECIFY START AND STOP CONTROLLERS -->
-  <node pkg="rosservice" type="rosservice" name="controller_manager_service"
-        args="call --wait /controller_manager/switch_controller 
-              '{ start_controllers: ['joint_group_position_controller'],
-                 stop_controllers: ['arm_controller'],
-                 strictness: 2,
-                 start_asap: True,
-                 timeout: 0 }' " />
+  <node name="servo_startup_services" pkg="servo_camera_pointer" type="servo_starter.sh"/>
 
   <!-- NODE TO CALCULATE TARGET POSE IN CAMERA FRAME -->
   <node name="look_at_pose_server" pkg="look_at_pose" type="look_at_pose_server"/>
