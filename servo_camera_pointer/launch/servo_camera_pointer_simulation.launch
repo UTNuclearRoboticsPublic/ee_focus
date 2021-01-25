@@ -1,7 +1,7 @@
 <launch>
 
     <!-- NODE TO RUN PHYSICAL SIMULATION -->
-    <include file="$(find ur_gazebo)/launch/ur5.launch">
+    <include file="$(find servo_camera_pointer)/launch/ur5.launch">
         <arg name="gui" value="false"/>
     </include>
 
