@@ -35,3 +35,11 @@ include_directories(
 add_executable(camera_pointer src/camera_pointer_main.cpp src/camera_pointer.cpp src/camera_pointer_publisher.cpp)
 target_link_libraries(camera_pointer ${catkin_LIBRARIES})
 add_dependencies(camera_pointer ${catkin_EXPORTED_TARGETS})
+
+install(PROGRAMS scripts/servo_starter.sh
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+catkin_install_python(PROGRAMS scripts/dynamic_tf.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

@@ -38,8 +38,6 @@ git clone https://github.com/UTNuclearRoboticsPublic/look_at_pose.git
 git clone https://github.com/ros-industrial/universal_robot.git
 rosdep install --from-paths . --ignore-src -y
 popd
-chmod +x src/vbats/servo_camera_pointer/scripts/dynamic_tf.py
-chmod +x src/vbats/servo_camera_pointer/scripts/servo_starter.sh
 catkin build
 source devel/setup.bash
 ```
