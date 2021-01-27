@@ -82,22 +82,16 @@ if __name__ == '__main__':
             print("You selected a letter or special character not a number!")
         elif int(key) == 1:
             state["x"] -= increment
-            print("x: " + str(state["x"]))
         elif int(key) == 2:
             state["x"] += increment
-            print("x: " + str(state["x"]))
         elif int(key) == 3:
             state["y"] -= increment
-            print("y: " + str(state["y"]))
         elif int(key) == 4:
             state["y"] += increment
-            print("y: " + str(state["y"]))
         elif int(key) == 5:
             state["z"] -= increment
-            print("z: " + str(state["z"]))
         elif int(key) == 6:
             state["z"] += increment
-            print("z: " + str(state["z"]))
         else:
             print("Not a valid number key!")
 
@@ -105,6 +99,10 @@ if __name__ == '__main__':
         transform_stamped.transform.translation.y = state["y"]
         transform_stamped.transform.translation.z = state["z"]
         broadcaster.sendTransform(transform_stamped)
+
+        #print("STATE  x: " + str(state["x"]) + "  y: " + str(state["y"]) + "  z: " + str(state["z"]) , end="\r", flush=True)
+        print("STATE    x: %.2f  y: %.2f  z: %.2f" % (state["x"], state["y"], state["z"]), end="\r", flush=True)
+
 
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)  
     
