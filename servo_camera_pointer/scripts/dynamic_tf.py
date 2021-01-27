@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-# __TODO__
-# Make sigint like handler to return terminal control
-# Make output only print on a single line
-# Make output print entire state
-# Make increment user configurable?
-
 import rospy
 import tf2_ros
 import geometry_msgs.msg
@@ -59,12 +53,19 @@ def main():
     transform_stamped = geometry_msgs.msg.TransformStamped()
     transform_stamped.header.frame_id = camera_frame_name
     transform_stamped.child_frame_id = target_frame_name
+
+    # Non zero intial state to avoid self collision
+    state = {"x": 1.0, "y": 1.0, "z": 1.0}
+
+    transform_stamped.transform.translation.x = state["x"]
+    transform_stamped.transform.translation.y = state["y"]
+    transform_stamped.transform.translation.z = state["z"]
     transform_stamped.transform.rotation.w = 1.0
 
-    # Publish first tf
+    # Publish first tf - prevents user from having to hit key before requesting service
+    # because stdin will block and therefore the init demo_frame will usually be at 
+    # the arm base and cause a self collision
     broadcaster.sendTransform(transform_stamped)
-
-    state = {"x": 0.0, "y": 0.0, "z": 0.0}
 
     key = 0
     increment = 0.1 # (m) How much each key stroke will translate in the given direction
