@@ -14,8 +14,13 @@ import tty
 import sys
 import termios
 
+# Store original terminal settings so we can restore the terminal when done
+orig_settings = termios.tcgetattr(sys.stdin)
 
-if __name__ == '__main__':
+# Makes it so we don't need to hit enter for every input
+tty.setcbreak(sys.stdin)
+
+def main():
     try:
         camera_frame_name, target_frame_name = sys.argv[1:3]
     except:
@@ -61,20 +66,15 @@ if __name__ == '__main__':
 
     state = {"x": 0.0, "y": 0.0, "z": 0.0}
 
-    # Store original terminal settings so we can restore the terminal when done
-    orig_settings = termios.tcgetattr(sys.stdin)
-
-    # Makes it so we don't need to hit enter for every input
-    tty.setcbreak(sys.stdin)
-
     key = 0
     increment = 0.1 # (m) How much each key stroke will translate in the given direction
     while key != chr(27): # ESC
         try:
             key = sys.stdin.read(1)[0]
         except:
-            msg = "An unkown input error occured- key not read"
+            msg = "An unkown input error occured - key not read"
             rospy.logerr(msg)
+            quit()
 
         if not key.isdigit():
             print("You selected a letter or special character!")
@@ -101,5 +101,11 @@ if __name__ == '__main__':
         print("STATE    x: %.2f  y: %.2f  z: %.2f" % (state["x"], state["y"], state["z"]), end="\r", flush=True)
 
 
-    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)  
+
+if __name__ == '__main__':
+    try:
+        main()
+    finally:
+        # Restore terminal control back to user
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)  
     
