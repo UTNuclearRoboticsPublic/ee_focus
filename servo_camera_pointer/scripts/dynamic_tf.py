@@ -99,9 +99,7 @@ def main():
         transform_stamped.transform.translation.z = state["z"]
         broadcaster.sendTransform(transform_stamped)
 
-        print("STATE    x: %.2f  y: %.2f  z: %.2f" % (state["x"], state["y"], state["z"]), end="\r", flush=True)
-
-
+        print("STATE    x: %.2f  y: %.2f  z: %.2f\r" % (state["x"], state["y"], state["z"]))
 
 if __name__ == '__main__':
     try:
