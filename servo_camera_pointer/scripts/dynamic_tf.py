@@ -73,13 +73,11 @@ if __name__ == '__main__':
         try:
             key = sys.stdin.read(1)[0]
         except:
-            msg = "An input error occured, restoring original terminal settings and exiting"
+            msg = "An unkown input error occured- key not read"
             rospy.logerr(msg)
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)  
-            quit()            
 
         if not key.isdigit():
-            print("You selected a letter or special character not a number!")
+            print("You selected a letter or special character!")
         elif int(key) == 1:
             state["x"] -= increment
         elif int(key) == 2:
@@ -93,14 +91,13 @@ if __name__ == '__main__':
         elif int(key) == 6:
             state["z"] += increment
         else:
-            print("Not a valid number key!")
+            print("Not a valid number key (hint: 1-6)!")
 
         transform_stamped.transform.translation.x = state["x"]
         transform_stamped.transform.translation.y = state["y"]
         transform_stamped.transform.translation.z = state["z"]
         broadcaster.sendTransform(transform_stamped)
 
-        #print("STATE  x: " + str(state["x"]) + "  y: " + str(state["y"]) + "  z: " + str(state["z"]) , end="\r", flush=True)
         print("STATE    x: %.2f  y: %.2f  z: %.2f" % (state["x"], state["y"], state["z"]), end="\r", flush=True)
 
 
