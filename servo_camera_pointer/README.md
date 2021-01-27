@@ -39,3 +39,7 @@ There are 3 big objects/classes associated with these tasks:
   3) `camera_pointer` - manages starting/stopping the Pose Tracking via ROS service, reading parameters, initializing things, etc
 
 The main thread of the executable will eventually be stuck in `CameraPointer::spin()`, which is managing the MoveIt Servo Pose Tracking object. Starting/stopping tracking is handled via service callbacks with `CameraPointer::startPointingCB` and `CameraPointer::stopPointingCB`. The `CameraPointerPublisher` object holds and manages its own thread where its math/publishing work will take place. Thus, when `CameraPointer` tells `CameraPointerPublisher` to start, the call returns instantly but kicks off a new thread with math/publishing work being done inside `CameraPointerPublisher`
+
+## Structure Overview
+
+![Alt Text](Camera_Pointer.png)
