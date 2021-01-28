@@ -33,14 +33,13 @@
 #include <ee_focus/ee_focus_publisher.h>
 
 namespace ee_focus {
-CameraPointerPublisher::CameraPointerPublisher(
-    ros::NodeHandle& nh,
-    std::string ee_frame,
-    std::string z_axis_up_frame,
-    std::string target_frame,
-    double loop_rate,
-    std::string look_pose_server_name,
-    std::string publish_topic_name)
+EEFocusPublisher::EEFocusPublisher(ros::NodeHandle& nh,
+                                   std::string ee_frame,
+                                   std::string z_axis_up_frame,
+                                   std::string target_frame,
+                                   double loop_rate,
+                                   std::string look_pose_server_name,
+                                   std::string publish_topic_name)
     : nh_(nh),
       tf_buffer_(),
       tf_listener_(tf_buffer_),
@@ -57,28 +56,28 @@ CameraPointerPublisher::CameraPointerPublisher(
       publish_topic_name, 1 /* queue */, true /* latch */);
 }
 
-CameraPointerPublisher::~CameraPointerPublisher() { stop(); }
+EEFocusPublisher::~EEFocusPublisher() { stop(); }
 
-void CameraPointerPublisher::stop() {
+void EEFocusPublisher::stop() {
   continue_publishing_ = false;
 
   if (thread_.joinable()) thread_.join();
 }
 
-void CameraPointerPublisher::start() {
+void EEFocusPublisher::start() {
   continue_publishing_ = true;
 
   thread_ = std::thread([this] { mainPubLoop(); });
 }
 
-void CameraPointerPublisher::mainPubLoop() {
+void EEFocusPublisher::mainPubLoop() {
   geometry_msgs::TransformStamped cam_to_gravity_tf, cam_to_target_tf;
   geometry_msgs::Vector3Stamped gravity;
   geometry_msgs::PoseStamped init_cam_pose;
   geometry_msgs::PoseStamped target_look_pose;
   look_at_pose::LookAtPose look_at_pose_service;
 
-  // The initial camera pose is always identity in the camera frame
+  // The initial EE pose is always identity in the EE frame
   init_cam_pose.header.frame_id = ee_frame_;
   init_cam_pose.pose.orientation.w = 1;
 
@@ -109,10 +108,10 @@ void CameraPointerPublisher::mainPubLoop() {
     gravity.vector.y = R_gravity(1, 2);
     gravity.vector.z = R_gravity(2, 2);
 
-    // We need to update the time for the initial camera pose (identity)
+    // We need to update the time for the initial EE pose (identity)
     init_cam_pose.header.stamp = ros::Time::now();
 
-    // Set the target pose in the camera frame using the found transformation
+    // Set the target pose in the EE frame using the found transformation
     target_look_pose.header.frame_id = cam_to_target_tf.header.frame_id;
     target_look_pose.header.stamp = cam_to_target_tf.header.stamp;
     target_look_pose.pose.position.x = cam_to_target_tf.transform.translation.x;
