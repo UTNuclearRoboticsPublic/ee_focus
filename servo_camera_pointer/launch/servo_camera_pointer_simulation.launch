@@ -1,0 +1,21 @@
+<launch>
+
+    <!-- NODE TO RUN PHYSICAL SIMULATION -->
+    <include file="$(find servo_camera_pointer)/launch/ur5.launch">
+        <arg name="gui" value="false"/>
+    </include>
+
+    <!-- NODE TO RUN INTERACTIVE CONTROL ENVIRONMENT -->
+    <include file="$(find ur5_moveit_config)/launch/moveit_rviz.launch">
+        <arg name="config" value="true"/>
+    </include>
+
+    <!-- NODE TO RUN MOVEIT CONTROLLERS -->
+    <include file="$(find ur5_moveit_config)/launch/ur5_moveit_planning_execution.launch">
+        <arg name="sim" value="true"/>
+    </include>
+    
+    <!-- NODE TO RUN CAMERA POINTER DEMO -->
+    <include file="$(find servo_camera_pointer)/launch/camera_pointer_demo.launch"/>
+
+</launch>

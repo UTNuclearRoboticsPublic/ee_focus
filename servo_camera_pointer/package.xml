@@ -19,6 +19,7 @@
   <build_export_depend>moveit_servo</build_export_depend>
   <build_export_depend>std_srvs</build_export_depend>
   <build_export_depend>tf2</build_export_depend>
+  <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>look_at_pose</exec_depend>
   <exec_depend>moveit_servo</exec_depend>
   <exec_depend>std_srvs</exec_depend>
