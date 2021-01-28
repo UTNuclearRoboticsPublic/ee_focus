@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //      Title     : camera_pointer_publisher.h
-//      Project   : servo_camera_pointer
+//      Project   : ee_focus
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
 //      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All
@@ -40,7 +40,7 @@
 #include <atomic>
 #include <thread>
 
-namespace servo_camera_pointer {
+namespace ee_focus {
 class CameraPointerPublisher {
  public:
   CameraPointerPublisher(ros::NodeHandle& nh,
@@ -91,4 +91,4 @@ class CameraPointerPublisher {
   // calls start()
   std::thread thread_;
 };
-}  // namespace servo_camera_pointer
+}  // namespace ee_focus

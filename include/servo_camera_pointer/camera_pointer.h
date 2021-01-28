@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //      Title     : camera_pointer.h
-//      Project   : servo_camera_pointer
+//      Project   : ee_focus
 //      Created   : 01/07/2020
 //      Author    : Adam Pettinger
 //      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All
@@ -35,12 +35,12 @@
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
 #include <ros/ros.h>
-#include <servo_camera_pointer/camera_pointer_publisher.h>
+#include <ee_focus/camera_pointer_publisher.h>
 #include <std_srvs/Trigger.h>
 
 #include <atomic>
 
-namespace servo_camera_pointer {
+namespace ee_focus {
 class CameraPointer {
  public:
   CameraPointer(
@@ -95,11 +95,11 @@ class CameraPointer {
   std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
 
   // Also hold the target pose publisher
-  std::unique_ptr<servo_camera_pointer::CameraPointerPublisher>
+  std::unique_ptr<ee_focus::CameraPointerPublisher>
       target_pose_publisher_;
 
   // Tolerances for when a move is "complete"
   double rotational_tolerance_;
   Eigen::Vector3d linear_tolerance_{1, 1, 1};
 };
-}  // namespace servo_camera_pointer
+}  // namespace ee_focus
