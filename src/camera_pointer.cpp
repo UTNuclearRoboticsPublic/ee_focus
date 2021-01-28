@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //      Title     : camera_pointer.cpp
-//      Project   : servo_camera_pointer
+//      Project   : ee_focus
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
 //      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All
@@ -30,11 +30,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <servo_camera_pointer/camera_pointer.h>
+#include <ee_focus/camera_pointer.h>
 
 #include <stdexcept>
 
-namespace servo_camera_pointer {
+namespace ee_focus {
 CameraPointer::CameraPointer(
     ros::NodeHandle& nh,
     std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object)
@@ -78,7 +78,7 @@ CameraPointer::CameraPointer(
 
   // Set up the target pose publisher
   target_pose_publisher_ =
-      std::make_unique<servo_camera_pointer::CameraPointerPublisher>(
+      std::make_unique<ee_focus::CameraPointerPublisher>(
           nh_,
           camera_frame_,
           z_axis_up_frame_,
@@ -189,4 +189,4 @@ bool CameraPointer::stop() {
   state_change_handled_ = true;
   return true;
 }
-}  // namespace servo_camera_pointer
+}  // namespace ee_focus

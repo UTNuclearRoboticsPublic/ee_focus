@@ -1,4 +1,4 @@
-#include <servo_camera_pointer/camera_pointer.h>
+#include <ee_focus/camera_pointer.h>
 
 static const std::string LOGNAME = "camera_pointer_main";
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   auto tracker =
       std::make_unique<moveit_servo::PoseTracking>(nh, planning_scene_monitor);
 
-  servo_camera_pointer::CameraPointer camera_pointer(nh, std::move(tracker));
+  ee_focus::CameraPointer camera_pointer(nh, std::move(tracker));
   camera_pointer.spin();
 
   return EXIT_SUCCESS;

@@ -48,14 +48,14 @@ Roughly following the instructions for the [Servo demo](https://github.com/ros-p
 In one terminal run:
 ```sh
 source ~/ws_camera_pointing/devel/setup.bash
-roslaunch servo_camera_pointer servo_camera_pointer_simulation.launch
+roslaunch ee_focus ee_focus_simulation.launch
 ```
 In the second terminal run the following command and manipulate the frame you want to look at, 'demo_frame' to the desired position:
 ```sh
 source ~/ws_camera_pointing/devel/setup.bash
-rosrun servo_camera_pointer dynamic_tf.py /world /demo_frame
+rosrun ee_focus dynamic_tf.py /world /demo_frame
 ```
 In the third terminal:
 ```sh
-rosservice call /servo_camera_pointer/start_camera_pointing
+rosservice call /ee_focus/start_camera_pointing
 ```

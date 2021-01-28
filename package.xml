@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>servo_camera_pointer</name>
+  <name>ee_focus</name>
   <version>0.0.0</version>
-  <description>The servo_camera_pointer package</description>
+  <description>The ee_focus package</description>
 
   <maintainer email="adam.pettinger@utexas.edu">Adam Pettinger</maintainer>
 
