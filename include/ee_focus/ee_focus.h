@@ -77,7 +77,7 @@ class CameraPointer {
   ros::NodeHandle nh_;
 
   // Store important frame names
-  std::string camera_frame_;
+  std::string ee_frame_;
   std::string z_axis_up_frame_;
   std::string target_frame_;
 

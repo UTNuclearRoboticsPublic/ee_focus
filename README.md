@@ -12,13 +12,13 @@ Intended steps of use:
 ## Launching
 To launch from the command line:
 ```sh
-roslaunch ee_focus ee_focus.launch camera_frame_name:=CAMERA gravity_frame_name:=GRAVITY target_frame_name:=TARGET loop_rate:=LOOP_RATE
+roslaunch ee_focus ee_focus.launch ee_frame_name:=CAMERA gravity_frame_name:=GRAVITY target_frame_name:=TARGET loop_rate:=LOOP_RATE
 ```
 
 To launch from another launch file:
 ```sh
 <include file="$(find PACKAGE)/launch/ee_focus.launch">
-    <arg name="camera_frame_name" value="CAMERA"/>
+    <arg name="ee_frame_name" value="CAMERA"/>
     <arg name="gravity_frame_name" value="GRAVITY"/>
     <arg name="target_frame_name" value="TARGET"/>
     <arg name="loop_rate" value="LOOP_RATE"/>

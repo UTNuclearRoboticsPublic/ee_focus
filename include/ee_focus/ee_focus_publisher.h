@@ -44,7 +44,7 @@ namespace ee_focus {
 class CameraPointerPublisher {
  public:
   CameraPointerPublisher(ros::NodeHandle& nh,
-                         std::string camera_frame,
+                         std::string ee_frame,
                          std::string z_axis_up_frame,
                          std::string target_frame,
                          double loop_rate,
@@ -76,7 +76,7 @@ class CameraPointerPublisher {
   tf2_ros::TransformListener tf_listener_;
 
   // frame names for the frame to move and default "Up" frame
-  std::string camera_frame_;
+  std::string ee_frame_;
   std::string z_axis_up_frame_;
   std::string target_frame_;
 
