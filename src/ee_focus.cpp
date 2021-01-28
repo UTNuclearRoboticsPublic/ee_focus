@@ -35,7 +35,7 @@
 #include <stdexcept>
 
 namespace ee_focus {
-CameraPointer::CameraPointer(
+EEFocus::EEFocus(
     ros::NodeHandle& nh,
     std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object)
     : nh_(nh), loop_rate_(1.0), rotational_tolerance_(0.0) {
@@ -43,14 +43,14 @@ CameraPointer::CameraPointer(
   drift_dims_client_ = nh_.serviceClient<moveit_msgs::ChangeDriftDimensions>(
       "change_drift_dimensions");
 
-  // Set up the servers for starting/stopping the camera pointing
+  // Set up the servers for starting/stopping the EE focusing
   start_pointing_server_ = nh_.advertiseService(
       ros::names::append(nh_.getNamespace(), "start_ee_focus"),
-      &CameraPointer::startPointingCB,
+      &EEFocus::startPointingCB,
       this);
   stop_pointing_server_ = nh_.advertiseService(
       ros::names::append(nh_.getNamespace(), "stop_ee_focus"),
-      &CameraPointer::stopPointingCB,
+      &EEFocus::stopPointingCB,
       this);
 
   // Read instance specific parameters
@@ -58,8 +58,7 @@ CameraPointer::CameraPointer(
   double loop_rate;
 
   if (!nh_.getParam("ee_frame_name", ee_frame_))
-    throw std::invalid_argument(
-        "Could not load parameter: 'ee_frame_name'");
+    throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
   if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'gravity_frame_name'");
@@ -78,14 +77,13 @@ CameraPointer::CameraPointer(
 
   // Set up the target pose publisher
   target_pose_publisher_ =
-      std::make_unique<ee_focus::CameraPointerPublisher>(
-          nh_,
-          ee_frame_,
-          z_axis_up_frame_,
-          target_frame_,
-          loop_rate,
-          look_at_pose_server_name,
-          target_pose_publish_topic);
+      std::make_unique<ee_focus::EEFocusPublisher>(nh_,
+                                                   ee_frame_,
+                                                   z_axis_up_frame_,
+                                                   target_frame_,
+                                                   loop_rate,
+                                                   look_at_pose_server_name,
+                                                   target_pose_publish_topic);
 
   // Set loop rate
   loop_rate_ = ros::Rate(loop_rate);
@@ -94,27 +92,27 @@ CameraPointer::CameraPointer(
   pose_tracking_ = std::move(pose_tracking_object);
 }
 
-bool CameraPointer::startPointingCB(std_srvs::Trigger::Request& req,
-                                    std_srvs::Trigger::Response& res) {
+bool EEFocus::startPointingCB(std_srvs::Trigger::Request& req,
+                              std_srvs::Trigger::Response& res) {
   continue_pointing_ = true;
   state_change_handled_ = false;
   res.success = true;
-  res.message = std::string("Starting to point camera '") + ee_frame_ +
+  res.message = std::string("Starting to focus EE '") + ee_frame_ +
                 std::string("' at frame '") + target_frame_ + std::string("'.");
   return true;
 }
 
-bool CameraPointer::stopPointingCB(std_srvs::Trigger::Request& req,
-                                   std_srvs::Trigger::Response& res) {
+bool EEFocus::stopPointingCB(std_srvs::Trigger::Request& req,
+                             std_srvs::Trigger::Response& res) {
   pose_tracking_->stopMotion();
   continue_pointing_ = false;
   state_change_handled_ = false;
   res.success = true;
-  res.message = "Stopping camera pointing";
+  res.message = "Stopping EE focusing";
   return true;
 }
 
-void CameraPointer::spin() {
+void EEFocus::spin() {
   while (ros::ok()) {
     // Check if we need to change states
     if (!state_change_handled_) {
@@ -127,7 +125,7 @@ void CameraPointer::spin() {
     // If we want to be pointing, do so
     if (continue_pointing_) {
       // Note that this line is blocking, so the stop CB needs to handle
-      // canceling this function by calling stopMotion() If the camera is
+      // canceling this function by calling stopMotion() If the EE is
       // already aligned this will end almost immediately and the while() here
       // will run quickly
       pose_tracking_->moveToPose(linear_tolerance_,
@@ -143,7 +141,7 @@ void CameraPointer::spin() {
   return;
 }
 
-bool CameraPointer::start() {
+bool EEFocus::start() {
   // Make all linear dimensions drift
   moveit_msgs::ChangeDriftDimensions drift_serv;
   drift_serv.request.drift_x_translation = true;
@@ -167,7 +165,7 @@ bool CameraPointer::start() {
   return true;
 }
 
-bool CameraPointer::stop() {
+bool EEFocus::stop() {
   // Reset all drift dimensions
   moveit_msgs::ChangeDriftDimensions drift_serv;
   drift_serv.request.drift_x_translation = false;

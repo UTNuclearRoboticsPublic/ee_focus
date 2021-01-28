@@ -30,7 +30,7 @@ Build MoveIt. I always run with small amount of cores or my computer freezes up 
 catkin build -j 2
 ```
 
-Install camera pointing package and build
+Install `ee_focus` package and build
 ```sh
 pushd src
 git clone --branch devel https://github.com/UTNuclearRobotics/vbats.git

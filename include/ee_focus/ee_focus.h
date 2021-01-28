@@ -32,21 +32,20 @@
 
 #pragma once
 
+#include <ee_focus/ee_focus_publisher.h>
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
 #include <ros/ros.h>
-#include <ee_focus/ee_focus_publisher.h>
 #include <std_srvs/Trigger.h>
 
 #include <atomic>
 
 namespace ee_focus {
-class CameraPointer {
+class EEFocus {
  public:
-  CameraPointer(
-      ros::NodeHandle& nh,
-      std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object);
-  ~CameraPointer(){};
+  EEFocus(ros::NodeHandle& nh,
+          std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object);
+  ~EEFocus(){};
 
   /* \brief Main spinning loop for this class */
   void spin();
@@ -66,7 +65,7 @@ class CameraPointer {
   bool stopPointingCB(std_srvs::Trigger::Request& req,
                       std_srvs::Trigger::Response& res);
 
-  // Server's to start and end camera pointing
+  // Server's to start and end EE focusing
   ros::ServiceServer start_pointing_server_;
   ros::ServiceServer stop_pointing_server_;
 
@@ -95,8 +94,7 @@ class CameraPointer {
   std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
 
   // Also hold the target pose publisher
-  std::unique_ptr<ee_focus::CameraPointerPublisher>
-      target_pose_publisher_;
+  std::unique_ptr<ee_focus::EEFocusPublisher> target_pose_publisher_;
 
   // Tolerances for when a move is "complete"
   double rotational_tolerance_;

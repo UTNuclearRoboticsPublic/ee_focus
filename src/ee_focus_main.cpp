@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   auto tracker =
       std::make_unique<moveit_servo::PoseTracking>(nh, planning_scene_monitor);
 
-  ee_focus::CameraPointer ee_focus(nh, std::move(tracker));
+  ee_focus::EEFocus ee_focus(nh, std::move(tracker));
   ee_focus.spin();
 
   return EXIT_SUCCESS;

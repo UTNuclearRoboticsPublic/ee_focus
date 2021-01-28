@@ -15,7 +15,7 @@
         <arg name="sim" value="true"/>
     </include>
     
-    <!-- NODE TO RUN CAMERA POINTER DEMO -->
+    <!-- NODE TO RUN EE FOCUS DEMO -->
     <include file="$(find ee_focus)/launch/ee_focus_demo.launch"/>
 
 </launch>
