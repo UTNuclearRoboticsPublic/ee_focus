@@ -42,4 +42,4 @@ The main thread of the executable will eventually be stuck in `CameraPointer::sp
 
 ## Structure Overview
 
-![Alt Text](Camera_Pointer.png)
+![Alt Text](EE_Focus.png)
