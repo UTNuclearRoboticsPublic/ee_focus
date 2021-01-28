@@ -16,6 +16,6 @@
     </include>
     
     <!-- NODE TO RUN CAMERA POINTER DEMO -->
-    <include file="$(find ee_focus)/launch/camera_pointer_demo.launch"/>
+    <include file="$(find ee_focus)/launch/ee_focus_demo.launch"/>
 
 </launch>

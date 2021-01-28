@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer_publisher.h
+//      Title     : ee_focus_publisher.h
 //      Project   : ee_focus
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger

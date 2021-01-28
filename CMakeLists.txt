@@ -32,9 +32,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(camera_pointer src/camera_pointer_main.cpp src/camera_pointer.cpp src/camera_pointer_publisher.cpp)
-target_link_libraries(camera_pointer ${catkin_LIBRARIES})
-add_dependencies(camera_pointer ${catkin_EXPORTED_TARGETS})
+add_executable(ee_focus src/ee_focus_main.cpp src/ee_focus.cpp src/ee_focus_publisher.cpp)
+target_link_libraries(ee_focus ${catkin_LIBRARIES})
+add_dependencies(ee_focus ${catkin_EXPORTED_TARGETS})
 
 install(PROGRAMS scripts/servo_starter.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

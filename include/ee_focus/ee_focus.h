@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer.h
+//      Title     : ee_focus.h
 //      Project   : ee_focus
 //      Created   : 01/07/2020
 //      Author    : Adam Pettinger
@@ -35,7 +35,7 @@
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
 #include <ros/ros.h>
-#include <ee_focus/camera_pointer_publisher.h>
+#include <ee_focus/ee_focus_publisher.h>
 #include <std_srvs/Trigger.h>
 
 #include <atomic>
