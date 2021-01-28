@@ -5,8 +5,8 @@ First we follow the [MoveIt source install instructions](https://moveit.ros.org/
 
 ```sh
 # Download/setup Moveit
-mkdir ws_camera_pointing
-cd ws_camera_pointing
+mkdir ws_ee_focus
+cd ws_ee_focus
 source /opt/ros/melodic/setup.bash
 wstool init src
 wstool merge -t src https://raw.githubusercontent.com/ros-planning/moveit/master/moveit.rosinstall
@@ -47,15 +47,15 @@ Roughly following the instructions for the [Servo demo](https://github.com/ros-p
 
 In one terminal run:
 ```sh
-source ~/ws_camera_pointing/devel/setup.bash
+source ~/ws_ee_focus/devel/setup.bash
 roslaunch ee_focus ee_focus_simulation.launch
 ```
 In the second terminal run the following command and manipulate the frame you want to look at, 'demo_frame' to the desired position:
 ```sh
-source ~/ws_camera_pointing/devel/setup.bash
+source ~/ws_ee_focus/devel/setup.bash
 rosrun ee_focus dynamic_tf.py /world /demo_frame
 ```
 In the third terminal:
 ```sh
-rosservice call /ee_focus/start_camera_pointing
+rosservice call /ee_focus/start_ee_focus
 ```
