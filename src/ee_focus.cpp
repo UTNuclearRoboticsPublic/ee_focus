@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer.cpp
-//      Project   : servo_camera_pointer
+//      Title     : ee_focus.cpp
+//      Project   : ee_focus
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
 //      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All
@@ -30,11 +30,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <servo_camera_pointer/camera_pointer.h>
+#include <ee_focus/ee_focus.h>
 
 #include <stdexcept>
 
-namespace servo_camera_pointer {
+namespace ee_focus {
 CameraPointer::CameraPointer(
     ros::NodeHandle& nh,
     std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_object)
@@ -45,11 +45,11 @@ CameraPointer::CameraPointer(
 
   // Set up the servers for starting/stopping the camera pointing
   start_pointing_server_ = nh_.advertiseService(
-      ros::names::append(nh_.getNamespace(), "start_camera_pointing"),
+      ros::names::append(nh_.getNamespace(), "start_ee_focus"),
       &CameraPointer::startPointingCB,
       this);
   stop_pointing_server_ = nh_.advertiseService(
-      ros::names::append(nh_.getNamespace(), "stop_camera_pointing"),
+      ros::names::append(nh_.getNamespace(), "stop_ee_focus"),
       &CameraPointer::stopPointingCB,
       this);
 
@@ -57,9 +57,9 @@ CameraPointer::CameraPointer(
   std::string look_at_pose_server_name, target_pose_publish_topic;
   double loop_rate;
 
-  if (!nh_.getParam("camera_frame_name", camera_frame_))
+  if (!nh_.getParam("ee_frame_name", ee_frame_))
     throw std::invalid_argument(
-        "Could not load parameter: 'camera_frame_name'");
+        "Could not load parameter: 'ee_frame_name'");
   if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'gravity_frame_name'");
@@ -78,9 +78,9 @@ CameraPointer::CameraPointer(
 
   // Set up the target pose publisher
   target_pose_publisher_ =
-      std::make_unique<servo_camera_pointer::CameraPointerPublisher>(
+      std::make_unique<ee_focus::CameraPointerPublisher>(
           nh_,
-          camera_frame_,
+          ee_frame_,
           z_axis_up_frame_,
           target_frame_,
           loop_rate,
@@ -99,7 +99,7 @@ bool CameraPointer::startPointingCB(std_srvs::Trigger::Request& req,
   continue_pointing_ = true;
   state_change_handled_ = false;
   res.success = true;
-  res.message = std::string("Starting to point camera '") + camera_frame_ +
+  res.message = std::string("Starting to point camera '") + ee_frame_ +
                 std::string("' at frame '") + target_frame_ + std::string("'.");
   return true;
 }
@@ -189,4 +189,4 @@ bool CameraPointer::stop() {
   state_change_handled_ = true;
   return true;
 }
-}  // namespace servo_camera_pointer
+}  // namespace ee_focus

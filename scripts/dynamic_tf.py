@@ -16,10 +16,10 @@ tty.setcbreak(sys.stdin)
 
 def main():
     try:
-        camera_frame_name, target_frame_name = sys.argv[1:3]
+        ee_frame_name, target_frame_name = sys.argv[1:3]
     except:
         msg = """You did not provide command line frame args!
-        Example: 'rosrun servo_camera_pointer dynamic_tf.py ee_link demo_link'"""
+        Example: 'rosrun ee_focus dynamic_tf.py ee_link demo_link'"""
         rospy.logerr(msg)
         quit()
     
@@ -28,7 +28,7 @@ def main():
     dyanmic_tf.py 
     ********************************************************************
     Used to dynamically control a frame to demonstrate 
-    the servo_camera_pointer capability.
+    the ee_focus capability.
     ********************************************************************
     Press the following keys to control the translation of the 
     target frame.
@@ -51,7 +51,7 @@ def main():
     
     # Initialize transform frame ids
     transform_stamped = geometry_msgs.msg.TransformStamped()
-    transform_stamped.header.frame_id = camera_frame_name
+    transform_stamped.header.frame_id = ee_frame_name
     transform_stamped.child_frame_id = target_frame_name
 
     # Non zero intial state to avoid self collision

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer_publisher.cpp
-//      Project   : servo_camera_pointer
+//      Title     : ee_focus_publisher.cpp
+//      Project   : ee_focus
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
 //      Copyright : Copyright© The University of Texas at Austin, 2014-2021. All
@@ -30,12 +30,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <servo_camera_pointer/camera_pointer_publisher.h>
+#include <ee_focus/ee_focus_publisher.h>
 
-namespace servo_camera_pointer {
+namespace ee_focus {
 CameraPointerPublisher::CameraPointerPublisher(
     ros::NodeHandle& nh,
-    std::string camera_frame,
+    std::string ee_frame,
     std::string z_axis_up_frame,
     std::string target_frame,
     double loop_rate,
@@ -44,7 +44,7 @@ CameraPointerPublisher::CameraPointerPublisher(
     : nh_(nh),
       tf_buffer_(),
       tf_listener_(tf_buffer_),
-      camera_frame_(camera_frame),
+      ee_frame_(ee_frame),
       z_axis_up_frame_(z_axis_up_frame),
       target_frame_(target_frame),
       loop_rate_(loop_rate) {
@@ -79,7 +79,7 @@ void CameraPointerPublisher::mainPubLoop() {
   look_at_pose::LookAtPose look_at_pose_service;
 
   // The initial camera pose is always identity in the camera frame
-  init_cam_pose.header.frame_id = camera_frame_;
+  init_cam_pose.header.frame_id = ee_frame_;
   init_cam_pose.pose.orientation.w = 1;
 
   // Keep going until ROS dies or stop requested
@@ -87,9 +87,9 @@ void CameraPointerPublisher::mainPubLoop() {
     // Look up the current transforms
     try {
       cam_to_gravity_tf = tf_buffer_.lookupTransform(
-          camera_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
+          ee_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
       cam_to_target_tf = tf_buffer_.lookupTransform(
-          camera_frame_, target_frame_, ros::Time(0), ros::Duration(1));
+          ee_frame_, target_frame_, ros::Time(0), ros::Duration(1));
     } catch (tf2::TransformException& ex) {
       ROS_ERROR_THROTTLE(1, "%s", ex.what());
       loop_rate_.sleep();
@@ -141,4 +141,4 @@ void CameraPointerPublisher::mainPubLoop() {
   }
   return;
 }
-}  // namespace servo_camera_pointer
+}  // namespace ee_focus
