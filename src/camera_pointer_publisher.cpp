@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer_publisher.cpp
+//      Title     : ee_focus_publisher.cpp
 //      Project   : ee_focus
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
@@ -30,7 +30,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ee_focus/camera_pointer_publisher.h>
+#include <ee_focus/ee_focus_publisher.h>
 
 namespace ee_focus {
 CameraPointerPublisher::CameraPointerPublisher(

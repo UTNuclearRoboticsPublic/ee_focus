@@ -16,7 +16,7 @@
   <node name="look_at_pose_server" pkg="look_at_pose" type="look_at_pose_server"/>
 
   <!-- NODE CONTAINING SERVO AND THE CAMERA POINTER COMMAND -->
-  <node name="ee_focus" pkg="ee_focus" type="camera_pointer" output="screen">
+  <node name="ee_focus" pkg="ee_focus" type="ee_focus" output="screen">
     <rosparam command="load" file="$(find ee_focus)/config/ur_simulated_config.yaml" />
     <rosparam command="load" file="$(find ee_focus)/config/pose_tracking_settings.yaml" />
 

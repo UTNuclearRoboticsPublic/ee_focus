@@ -1,6 +1,6 @@
-#include <ee_focus/camera_pointer.h>
+#include <ee_focus/ee_focus.h>
 
-static const std::string LOGNAME = "camera_pointer_main";
+static const std::string LOGNAME = "ee_focus_main";
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, LOGNAME);
@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
   auto tracker =
       std::make_unique<moveit_servo::PoseTracking>(nh, planning_scene_monitor);
 
-  ee_focus::CameraPointer camera_pointer(nh, std::move(tracker));
-  camera_pointer.spin();
+  ee_focus::CameraPointer ee_focus(nh, std::move(tracker));
+  ee_focus.spin();
 
   return EXIT_SUCCESS;
 }

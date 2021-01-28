@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : camera_pointer.cpp
+//      Title     : ee_focus.cpp
 //      Project   : ee_focus
 //      Created   : 12/15/2020
 //      Author    : Adam Pettinger
@@ -30,7 +30,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ee_focus/camera_pointer.h>
+#include <ee_focus/ee_focus.h>
 
 #include <stdexcept>
 
