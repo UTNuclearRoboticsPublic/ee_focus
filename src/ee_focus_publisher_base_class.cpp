@@ -90,7 +90,7 @@ void EEFPublisherBase::mainPubLoop() {
     target_look_pose.pose.orientation = ee_to_target_tf.transform.rotation;
 
     // Populate the look_at_pose service request
-    look_at_pose_service.request.initial_ee_pose = init_ee_pose;
+    look_at_pose_service.request.initial_cam_pose = init_ee_pose;
     look_at_pose_service.request.target_pose = target_look_pose;
     look_at_pose_service.request.up = gravity;
 
@@ -102,8 +102,8 @@ void EEFPublisherBase::mainPubLoop() {
     }
 
     // Publish the pose
-    look_at_pose_service.response.new_ee_pose.header.stamp = ros::Time::now();
-    target_pose_pub_.publish(look_at_pose_service.response.new_ee_pose);
+    look_at_pose_service.response.new_cam_pose.header.stamp = ros::Time::now();
+    target_pose_pub_.publish(look_at_pose_service.response.new_cam_pose);
 
     // Sleep at loop rate
     loop_rate_.sleep();
