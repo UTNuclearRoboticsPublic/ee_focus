@@ -38,12 +38,11 @@ class EEFPublisherBase {
   void mainPubLoop();
 
   /* \brief Where all the work to calculate the desired pose is done  */
-  virtual look_at_pose::LookAtPose poseCalulation(
-      const geometry_msgs::TransformStamped ee_to_gravity_tf,
-      const geometry_msgs::TransformStamped ee_to_target_tf) const = 0;
+  virtual const bool poseCalulation(
+      geometry_msgs::PoseStamped& target_pose) = 0;
 
   // Server Client to use look at pose
-  ros::ServiceClient look_pose_client_;
+  ros::ServiceClient look_pose_client_;  // TODO move to superclass
   // Publisher to send poses to Servo Pose Tracking
   ros::Publisher target_pose_pub_;
   // node handle
@@ -52,9 +51,9 @@ class EEFPublisherBase {
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
   // frame names for the frame to move and default "Up" frame
-  std::string ee_frame_;
-  std::string z_axis_up_frame_;
-  std::string target_frame_;
+  std::string ee_frame_;         // TODO move to superclass
+  std::string z_axis_up_frame_;  // TODO move to superclass
+  std::string target_frame_;     // TODO move to superclass
   // loop rate
   ros::Rate loop_rate_;
   // Only continue publishing while this is true. Another thread can set this to

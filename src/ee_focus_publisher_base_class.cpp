@@ -41,48 +41,14 @@ void EEFPublisherBase::stop() {
 EEFPublisherBase::~EEFPublisherBase() { stop(); }
 
 void EEFPublisherBase::mainPubLoop() {
-  geometry_msgs::TransformStamped ee_to_gravity_tf, ee_to_target_tf;
-  geometry_msgs::Vector3Stamped gravity;
-  geometry_msgs::PoseStamped init_ee_pose;
-  geometry_msgs::PoseStamped target_look_pose;
-  look_at_pose::LookAtPose look_at_pose_service;
-
-  // The initial EE pose is always identity in the EE frame
-  init_ee_pose.header.frame_id = ee_frame_;
-  init_ee_pose.pose.orientation.w = 1;
-
+  geometry_msgs::PoseStamped target_pose;
   // Keep going until ROS dies or stop requested
   while (ros::ok() && continue_publishing_) {
-    // Look up the current transforms
-    try {
-      ee_to_gravity_tf = tf_buffer_.lookupTransform(
-          ee_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
-      ee_to_target_tf = tf_buffer_.lookupTransform(
-          ee_frame_, target_frame_, ros::Time(0), ros::Duration(1));
-    } catch (tf2::TransformException& ex) {
-      ROS_ERROR_THROTTLE(1, "%s", ex.what());
-      loop_rate_.sleep();
-      continue;
-    }
-
     // Do the bulk of the calculation
-    look_at_pose_service = poseCalulation(ee_to_gravity_tf, ee_to_target_tf);
-
-    // We need to update the time for the initial EE pose (identity)
-    init_ee_pose.header.stamp = ros::Time::now();
-    // Populate the rest of the look_at_pose service request
-    look_at_pose_service.request.initial_cam_pose = init_ee_pose;
-
-    // Call the look_at_pose service
-    if (!look_pose_client_.call(look_at_pose_service)) {
-      ROS_ERROR_STREAM_THROTTLE(1, "NO RESPONSE FROM: look_at_pose");
-      loop_rate_.sleep();
-      continue;
+    if (poseCalulation(target_pose)) {
+      target_pose.header.stamp = ros::Time::now();
+      target_pose_pub_.publish(target_pose);
     }
-
-    // Publish the pose
-    look_at_pose_service.response.new_cam_pose.header.stamp = ros::Time::now();
-    target_pose_pub_.publish(look_at_pose_service.response.new_cam_pose);
 
     // Sleep at loop rate
     loop_rate_.sleep();
@@ -90,11 +56,31 @@ void EEFPublisherBase::mainPubLoop() {
   return;
 }
 
-look_at_pose::LookAtPose EEFPublisherBase::poseCalulation(
-    const geometry_msgs::TransformStamped ee_to_gravity_tf,
-    const geometry_msgs::TransformStamped ee_to_target_tf) const{
+const bool EEFPublisherBase::poseCalulation(
+    geometry_msgs::PoseStamped& target_pose) {
+  // TODO in full implementation, these are prob class variables of super class
+  // to avoid constantly init them
+  geometry_msgs::TransformStamped ee_to_gravity_tf, ee_to_target_tf;
+  geometry_msgs::PoseStamped init_ee_pose;
+
+  // The initial EE pose is always identity in the EE frame
+  init_ee_pose.header.frame_id = ee_frame_;  // TODO do in superclass init?
+  init_ee_pose.pose.orientation.w = 1;       // TODO do in superclass init?
+
   // TODO pass look at pose service as a pointer
-  look_at_pose::LookAtPose look_at_pose_service;
+  look_at_pose::LookAtPose
+      look_at_pose_service;  // TODO super class member variable?
+
+  // Look up the current transforms
+  try {
+    ee_to_gravity_tf = tf_buffer_.lookupTransform(
+        ee_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
+    ee_to_target_tf = tf_buffer_.lookupTransform(
+        ee_frame_, target_frame_, ros::Time(0), ros::Duration(1));
+  } catch (tf2::TransformException& ex) {
+    ROS_ERROR_THROTTLE(1, "%s", ex.what());
+    return false;
+  }
 
   // Convert the transform for the gravity frame to a rotation matrix
   Eigen::Quaterniond q_gravity(ee_to_gravity_tf.transform.rotation.w,
@@ -123,7 +109,19 @@ look_at_pose::LookAtPose EEFPublisherBase::poseCalulation(
   look_at_pose_service.request.target_pose = target_look_pose;
   look_at_pose_service.request.up = gravity;
 
-  return look_at_pose_service;
+  // We need to update the time for the initial EE pose (identity)
+  init_ee_pose.header.stamp = ros::Time::now();
+  // Populate the rest of the look_at_pose service request
+  look_at_pose_service.request.initial_cam_pose = init_ee_pose;
+
+  // Call the look_at_pose service
+  if (!look_pose_client_.call(look_at_pose_service)) {
+    ROS_ERROR_STREAM_THROTTLE(1, "NO RESPONSE FROM: look_at_pose");
+    return false;
+  }
+
+  target_pose = look_at_pose_service.response.new_cam_pose;
+  return true;
 }
 
 // TODO what about this default loop rate value?
