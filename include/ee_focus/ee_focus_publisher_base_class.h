@@ -38,7 +38,9 @@ class EEFPublisherBase {
   void mainPubLoop();
 
   /* \brief Where all the work to calculate the desired pose is done  */
-  virtual geometry_msgs::PoseStamped poseCalulation() = 0;
+  virtual look_at_pose::LookAtPose poseCalulation(
+      const geometry_msgs::TransformStamped ee_to_gravity_tf,
+      const geometry_msgs::TransformStamped ee_to_target_tf) const = 0;
 
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;
