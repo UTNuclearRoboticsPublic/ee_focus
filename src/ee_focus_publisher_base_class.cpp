@@ -41,23 +41,23 @@ void EEFPublisherBase::stop() {
 EEFPublisherBase::~EEFPublisherBase() { stop(); }
 
 void EEFPublisherBase::mainPubLoop() {
-  geometry_msgs::TransformStamped cam_to_gravity_tf, cam_to_target_tf;
+  geometry_msgs::TransformStamped ee_to_gravity_tf, ee_to_target_tf;
   geometry_msgs::Vector3Stamped gravity;
-  geometry_msgs::PoseStamped init_cam_pose;
+  geometry_msgs::PoseStamped init_ee_pose;
   geometry_msgs::PoseStamped target_look_pose;
   look_at_pose::LookAtPose look_at_pose_service;
 
   // The initial EE pose is always identity in the EE frame
-  init_cam_pose.header.frame_id = ee_frame_;
-  init_cam_pose.pose.orientation.w = 1;
+  init_ee_pose.header.frame_id = ee_frame_;
+  init_ee_pose.pose.orientation.w = 1;
 
   // Keep going until ROS dies or stop requested
   while (ros::ok() && continue_publishing_) {
     // Look up the current transforms
     try {
-      cam_to_gravity_tf = tf_buffer_.lookupTransform(
+      ee_to_gravity_tf = tf_buffer_.lookupTransform(
           ee_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
-      cam_to_target_tf = tf_buffer_.lookupTransform(
+      ee_to_target_tf = tf_buffer_.lookupTransform(
           ee_frame_, target_frame_, ros::Time(0), ros::Duration(1));
     } catch (tf2::TransformException& ex) {
       ROS_ERROR_THROTTLE(1, "%s", ex.what());
@@ -66,31 +66,31 @@ void EEFPublisherBase::mainPubLoop() {
     }
 
     // Convert the transform for the gravity frame to a rotation matrix
-    Eigen::Quaterniond q_gravity(cam_to_gravity_tf.transform.rotation.w,
-                                 cam_to_gravity_tf.transform.rotation.x,
-                                 cam_to_gravity_tf.transform.rotation.y,
-                                 cam_to_gravity_tf.transform.rotation.z);
+    Eigen::Quaterniond q_gravity(ee_to_gravity_tf.transform.rotation.w,
+                                 ee_to_gravity_tf.transform.rotation.x,
+                                 ee_to_gravity_tf.transform.rotation.y,
+                                 ee_to_gravity_tf.transform.rotation.z);
     Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
 
     // Populate gravity vector as the z-axis of rotation matrix
-    gravity.header.frame_id = cam_to_gravity_tf.header.frame_id;
+    gravity.header.frame_id = ee_to_gravity_tf.header.frame_id;
     gravity.vector.x = R_gravity(0, 2);
     gravity.vector.y = R_gravity(1, 2);
     gravity.vector.z = R_gravity(2, 2);
 
     // We need to update the time for the initial EE pose (identity)
-    init_cam_pose.header.stamp = ros::Time::now();
+    init_ee_pose.header.stamp = ros::Time::now();
 
     // Set the target pose in the EE frame using the found transformation
-    target_look_pose.header.frame_id = cam_to_target_tf.header.frame_id;
-    target_look_pose.header.stamp = cam_to_target_tf.header.stamp;
-    target_look_pose.pose.position.x = cam_to_target_tf.transform.translation.x;
-    target_look_pose.pose.position.y = cam_to_target_tf.transform.translation.y;
-    target_look_pose.pose.position.z = cam_to_target_tf.transform.translation.z;
-    target_look_pose.pose.orientation = cam_to_target_tf.transform.rotation;
+    target_look_pose.header.frame_id = ee_to_target_tf.header.frame_id;
+    target_look_pose.header.stamp = ee_to_target_tf.header.stamp;
+    target_look_pose.pose.position.x = ee_to_target_tf.transform.translation.x;
+    target_look_pose.pose.position.y = ee_to_target_tf.transform.translation.y;
+    target_look_pose.pose.position.z = ee_to_target_tf.transform.translation.z;
+    target_look_pose.pose.orientation = ee_to_target_tf.transform.rotation;
 
     // Populate the look_at_pose service request
-    look_at_pose_service.request.initial_cam_pose = init_cam_pose;
+    look_at_pose_service.request.initial_ee_pose = init_ee_pose;
     look_at_pose_service.request.target_pose = target_look_pose;
     look_at_pose_service.request.up = gravity;
 
@@ -102,8 +102,8 @@ void EEFPublisherBase::mainPubLoop() {
     }
 
     // Publish the pose
-    look_at_pose_service.response.new_cam_pose.header.stamp = ros::Time::now();
-    target_pose_pub_.publish(look_at_pose_service.response.new_cam_pose);
+    look_at_pose_service.response.new_ee_pose.header.stamp = ros::Time::now();
+    target_pose_pub_.publish(look_at_pose_service.response.new_ee_pose);
 
     // Sleep at loop rate
     loop_rate_.sleep();
