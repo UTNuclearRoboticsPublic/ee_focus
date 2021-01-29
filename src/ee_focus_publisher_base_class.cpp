@@ -9,12 +9,15 @@ void EEFPublisherBase::initialize(ros::NodeHandle& nh,
                                   double loop_rate,
                                   std::string look_pose_server_name,
                                   std::string publish_topic_name) {
-  nh_ = nh;
+  nh_ = nh;  // TODO does this do what I want it to do?
   ee_frame_ = ee_frame;
   z_axis_up_frame_ = z_axis_up_frame;
   target_frame_ = target_frame;
   loop_rate_ = loop_rate;
+
+  return;
 }
+
 void EEFPublisherBase::start() {
   continue_publishing_ = true;
 
@@ -41,6 +44,7 @@ void EEFPublisherBase::mainPubLoop() { return; }
 
 geometry_msgs::PoseStamped EEFPublisherBase::poseCalulation() {
   geometry_msgs::PoseStamped dummy;
+
   return dummy;
 }
 
