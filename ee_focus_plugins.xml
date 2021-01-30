@@ -1,0 +1,6 @@
+<library path="lib/libee_focus_plugins">
+  <class type="ee_focus::UnconstrainedCameraPointer" base_class_type="ee_focus::EEFPublisherBase">
+    <description>This is the original unconstrained camera pointer build by Adam Pettinger.</description>
+  </class>
+</library>
+
