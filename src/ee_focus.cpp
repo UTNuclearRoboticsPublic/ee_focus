@@ -31,6 +31,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ee_focus/ee_focus.h>
+#include <pluginlib/class_loader.h>
 
 #include <stdexcept>
 
@@ -76,14 +77,23 @@ EEFocus::EEFocus(
   nh_.param<double>("rotational_tolerance", rotational_tolerance_, 0.0);
 
   // Set up the target pose publisher
-  target_pose_publisher_ =
-      std::make_unique<ee_focus::EEFocusPublisher>(nh_,
-                                                   ee_frame_,
-                                                   z_axis_up_frame_,
-                                                   target_frame_,
-                                                   loop_rate,
-                                                   look_at_pose_server_name,
-                                                   target_pose_publish_topic);
+  pluginlib::ClassLoader<ee_focus::EEFPublisherBase> ee_focus_loader(
+      "ee_focus", "ee_focus::EEFPublisherBase");
+
+  try {
+    boost::shared_ptr<ee_focus::EEFPublisherBase> target_pose_publisher_ =
+        ee_focus_loader.createInstance("ee_focus::UnconstrainedCameraPointer");
+    target_pose_publisher_->initialize(nh_,
+                                      ee_frame_,
+                                      z_axis_up_frame_,
+                                      target_frame_,
+                                      loop_rate,
+                                      look_at_pose_server_name,
+                                      target_pose_publish_topic);
+  } catch (pluginlib::PluginlibException& ex) {
+    ROS_ERROR("The plugin failed to load for some reason. Error: %s",
+              ex.what());
+  }
 
   // Set loop rate
   loop_rate_ = ros::Rate(loop_rate);
