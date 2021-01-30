@@ -24,7 +24,7 @@ class EEFPublisherBase {
     ee_frame_ = ee_frame;
     z_axis_up_frame_ = z_axis_up_frame;
     target_frame_ = target_frame;
-    loop_rate_ = loop_rate;
+    loop_rate_ = ros::Rate(loop_rate);
 
     return;
   }
