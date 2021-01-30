@@ -27,6 +27,17 @@ class EEFPublisherBase {
   /* \brief Stops the publisher */
   virtual void stop();
 
+  /* \brief Where all the work to calculate the desired pose is done  */
+  virtual const bool poseCalulation(
+      geometry_msgs::PoseStamped& target_pose) = 0;
+
+  // TODO we have them getters, but do we need to give them setters too or no?
+  ros::ServiceClient getLookPoseClient();
+  tf2_ros::Buffer& getTFBuffer();
+  std::string getEEFrame();
+  std::string getZAxisUpFrame();
+  std::string getTargetFrame();
+
   virtual ~EEFPublisherBase();
 
  protected:
@@ -36,10 +47,6 @@ class EEFPublisherBase {
  private:
   /* \brief Where generic publishing infrastructure is implemented  */
   void mainPubLoop();
-
-  /* \brief Where all the work to calculate the desired pose is done  */
-  virtual const bool poseCalulation(
-      geometry_msgs::PoseStamped& target_pose) = 0;
 
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;  // TODO move to superclass
