@@ -19,34 +19,72 @@ class EEFPublisherBase {
                   std::string target_frame,
                   double loop_rate,
                   std::string look_pose_server_name,
-                  std::string publish_topic_name);
+                  std::string publish_topic_name) {
+    nh_ = nh;  // TODO does this do what I want it to do?
+    ee_frame_ = ee_frame;
+    z_axis_up_frame_ = z_axis_up_frame;
+    target_frame_ = target_frame;
+    loop_rate_ = loop_rate;
+
+    return;
+  }
 
   /* \brief Starts the publisher indefinitely */
-  virtual void start();
+  virtual void start() {
+    continue_publishing_ = true;
+
+    thread_ = std::thread([this] { mainPubLoop(); });
+
+    return;
+  }
 
   /* \brief Stops the publisher */
-  virtual void stop();
+  virtual void stop() {
+    continue_publishing_ = false;
+
+    // Too many horror stories of problems caused by leaving out brackets,
+    // sorry :)
+    if (thread_.joinable()) {
+      thread_.join();
+    }
+
+    return;
+  }
 
   /* \brief Where all the work to calculate the desired pose is done  */
   virtual const bool poseCalulation(
       geometry_msgs::PoseStamped& target_pose) = 0;
 
   // TODO we have them getters, but do we need to give them setters too or no?
-  ros::ServiceClient getLookPoseClient();
-  tf2_ros::Buffer& getTFBuffer();
-  std::string getEEFrame();
-  std::string getZAxisUpFrame();
-  std::string getTargetFrame();
+  ros::ServiceClient getLookPoseClient() { return look_pose_client_; }
+  tf2_ros::Buffer& getTFBuffer() { return tf_buffer_; }
+  std::string getEEFrame() { return ee_frame_; }
+  std::string getZAxisUpFrame() { return z_axis_up_frame_; }
+  std::string getTargetFrame() { return target_frame_; }
 
-  virtual ~EEFPublisherBase();
+  virtual ~EEFPublisherBase() { stop(); }
 
  protected:
   /* \brief Pluginlib requires empty base class constructor  */
-  EEFPublisherBase();
+  EEFPublisherBase() : tf_buffer_(), tf_listener_(tf_buffer_), loop_rate_(10) {}
 
  private:
   /* \brief Where generic publishing infrastructure is implemented  */
-  void mainPubLoop();
+  void mainPubLoop() {
+    geometry_msgs::PoseStamped target_pose;
+    // Keep going until ROS dies or stop requested
+    while (ros::ok() && continue_publishing_) {
+      // Do the bulk of the calculation
+      if (poseCalulation(target_pose)) {
+        target_pose.header.stamp = ros::Time::now();
+        target_pose_pub_.publish(target_pose);
+      }
+
+      // Sleep at loop rate
+      loop_rate_.sleep();
+    }
+    return;
+  }
 
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;  // TODO move to superclass
