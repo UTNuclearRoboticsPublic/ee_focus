@@ -31,6 +31,6 @@
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
+      <ee_focus plugin="${prefix}/ee_focus_plugins.xml" />
   </export>
 </package>
