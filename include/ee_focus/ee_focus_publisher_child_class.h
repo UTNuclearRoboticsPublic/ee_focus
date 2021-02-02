@@ -28,30 +28,21 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     look_pose_client_ =
         nh.serviceClient<look_at_pose::LookAtPose>(look_at_pose_server_name);
 
+    // The initial EE pose is always identity in the EE frame
+    init_ee_pose_.header.frame_id = ee_frame_;
+    init_ee_pose_.pose.orientation.w = 1;
+
     // Call base class init function
     EEFPublisherBase::initialize(nh, loop_rate, publish_topic_name);
   }
 
   /* \brief Where all the work to calculate unconstrained camera pose happens */
   const bool poseCalulation(geometry_msgs::PoseStamped& target_pose) {
-    // TODO in full implementation, these are prob class variables of super
-    // class to avoid constantly init them
-    geometry_msgs::TransformStamped ee_to_gravity_tf, ee_to_target_tf;
-    geometry_msgs::PoseStamped init_ee_pose;
-
-    // The initial EE pose is always identity in the EE frame
-    init_ee_pose.header.frame_id = ee_frame_;  // TODO do in superclass init?
-    init_ee_pose.pose.orientation.w = 1;       // TODO do in superclass init?
-
-    // TODO pass look at pose service as a pointer
-    look_at_pose::LookAtPose
-        look_at_pose_service;  // TODO super class member variable?
-
     // Look up the current transforms
     try {
-      ee_to_gravity_tf = getTFBuffer().lookupTransform(
+      ee_to_gravity_tf_ = getTFBuffer().lookupTransform(
           ee_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
-      ee_to_target_tf = getTFBuffer().lookupTransform(
+      ee_to_target_tf_ = getTFBuffer().lookupTransform(
           ee_frame_, target_frame_, ros::Time(0), ros::Duration(1));
     } catch (tf2::TransformException& ex) {
       ROS_ERROR_THROTTLE(1, "%s", ex.what());
@@ -59,44 +50,44 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     }
 
     // Convert the transform for the gravity frame to a rotation matrix
-    Eigen::Quaterniond q_gravity(ee_to_gravity_tf.transform.rotation.w,
-                                 ee_to_gravity_tf.transform.rotation.x,
-                                 ee_to_gravity_tf.transform.rotation.y,
-                                 ee_to_gravity_tf.transform.rotation.z);
+    Eigen::Quaterniond q_gravity(ee_to_gravity_tf_.transform.rotation.w,
+                                 ee_to_gravity_tf_.transform.rotation.x,
+                                 ee_to_gravity_tf_.transform.rotation.y,
+                                 ee_to_gravity_tf_.transform.rotation.z);
     Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
 
     // Populate gravity vector as the z-axis of rotation matrix
     geometry_msgs::Vector3Stamped gravity;
-    gravity.header.frame_id = ee_to_gravity_tf.header.frame_id;
+    gravity.header.frame_id = ee_to_gravity_tf_.header.frame_id;
     gravity.vector.x = R_gravity(0, 2);
     gravity.vector.y = R_gravity(1, 2);
     gravity.vector.z = R_gravity(2, 2);
 
     // Set the target pose in the EE frame using the found transformation
     geometry_msgs::PoseStamped target_look_pose;
-    target_look_pose.header.frame_id = ee_to_target_tf.header.frame_id;
-    target_look_pose.header.stamp = ee_to_target_tf.header.stamp;
-    target_look_pose.pose.position.x = ee_to_target_tf.transform.translation.x;
-    target_look_pose.pose.position.y = ee_to_target_tf.transform.translation.y;
-    target_look_pose.pose.position.z = ee_to_target_tf.transform.translation.z;
-    target_look_pose.pose.orientation = ee_to_target_tf.transform.rotation;
+    target_look_pose.header.frame_id = ee_to_target_tf_.header.frame_id;
+    target_look_pose.header.stamp = ee_to_target_tf_.header.stamp;
+    target_look_pose.pose.position.x = ee_to_target_tf_.transform.translation.x;
+    target_look_pose.pose.position.y = ee_to_target_tf_.transform.translation.y;
+    target_look_pose.pose.position.z = ee_to_target_tf_.transform.translation.z;
+    target_look_pose.pose.orientation = ee_to_target_tf_.transform.rotation;
 
     // Populate the look_at_pose service request
-    look_at_pose_service.request.target_pose = target_look_pose;
-    look_at_pose_service.request.up = gravity;
+    look_at_pose_service_.request.target_pose = target_look_pose;
+    look_at_pose_service_.request.up = gravity;
 
     // We need to update the time for the initial EE pose (identity)
-    init_ee_pose.header.stamp = ros::Time::now();
+    init_ee_pose_.header.stamp = ros::Time::now();
     // Populate the rest of the look_at_pose service request
-    look_at_pose_service.request.initial_cam_pose = init_ee_pose;
+    look_at_pose_service_.request.initial_cam_pose = init_ee_pose_;
 
     // Call the look_at_pose service
-    if (!look_pose_client_.call(look_at_pose_service)) {
+    if (!look_pose_client_.call(look_at_pose_service_)) {
       ROS_ERROR_STREAM_THROTTLE(1, "NO RESPONSE FROM: look_at_pose");
       return false;
     }
 
-    target_pose = look_at_pose_service.response.new_cam_pose;
+    target_pose = look_at_pose_service_.response.new_cam_pose;
     return true;
   }
 
@@ -108,6 +99,13 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
   std::string ee_frame_;
   std::string z_axis_up_frame_;
   std::string target_frame_;
+
+  // Some objects used in the main loop
+  // Declare here to avoid constant allocation while running
+  look_at_pose::LookAtPose look_at_pose_service_;
+  geometry_msgs::PoseStamped init_ee_pose_;
+  geometry_msgs::TransformStamped ee_to_gravity_tf_;
+  geometry_msgs::TransformStamped ee_to_target_tf_;
 };
 
 }  // namespace ee_focus
