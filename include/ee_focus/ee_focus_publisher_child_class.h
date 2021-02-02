@@ -8,6 +8,30 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
  public:
   UnconstrainedCameraPointer() {}
 
+  void initialize(ros::NodeHandle& nh,
+                  double loop_rate,
+                  std::string publish_topic_name) {
+    // Load child-specific parameters
+    if (!nh.getParam("ee_frame_name", ee_frame_))
+      throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
+    if (!nh.getParam("gravity_frame_name", z_axis_up_frame_))
+      throw std::invalid_argument(
+          "Could not load parameter: 'gravity_frame_name'");
+    if (!nh.getParam("target_frame_name", target_frame_))
+      throw std::invalid_argument(
+          "Could not load parameter: 'target_frame_name'");
+
+    // Set up look_at_pose service client
+    std::string look_at_pose_server_name;
+    nh.param<std::string>(
+        "look_at_pose_server_name", look_at_pose_server_name, "/look_at_pose");
+    look_pose_client_ =
+        nh.serviceClient<look_at_pose::LookAtPose>(look_at_pose_server_name);
+
+    // Call base class init function
+    EEFPublisherBase::initialize(nh, loop_rate, publish_topic_name);
+  }
+
   /* \brief Where all the work to calculate unconstrained camera pose happens */
   const bool poseCalulation(geometry_msgs::PoseStamped& target_pose) {
     // TODO in full implementation, these are prob class variables of super
@@ -16,8 +40,8 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     geometry_msgs::PoseStamped init_ee_pose;
 
     // The initial EE pose is always identity in the EE frame
-    init_ee_pose.header.frame_id = getEEFrame();  // TODO do in superclass init?
-    init_ee_pose.pose.orientation.w = 1;          // TODO do in superclass init?
+    init_ee_pose.header.frame_id = ee_frame_;  // TODO do in superclass init?
+    init_ee_pose.pose.orientation.w = 1;       // TODO do in superclass init?
 
     // TODO pass look at pose service as a pointer
     look_at_pose::LookAtPose
@@ -26,9 +50,9 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     // Look up the current transforms
     try {
       ee_to_gravity_tf = getTFBuffer().lookupTransform(
-          getEEFrame(), getZAxisUpFrame(), ros::Time(0), ros::Duration(1));
+          ee_frame_, z_axis_up_frame_, ros::Time(0), ros::Duration(1));
       ee_to_target_tf = getTFBuffer().lookupTransform(
-          getEEFrame(), getTargetFrame(), ros::Time(0), ros::Duration(1));
+          ee_frame_, target_frame_, ros::Time(0), ros::Duration(1));
     } catch (tf2::TransformException& ex) {
       ROS_ERROR_THROTTLE(1, "%s", ex.what());
       return false;
@@ -67,7 +91,7 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     look_at_pose_service.request.initial_cam_pose = init_ee_pose;
 
     // Call the look_at_pose service
-    if (!getLookPoseClient().call(look_at_pose_service)) {
+    if (!look_pose_client_.call(look_at_pose_service)) {
       ROS_ERROR_STREAM_THROTTLE(1, "NO RESPONSE FROM: look_at_pose");
       return false;
     }
@@ -75,6 +99,15 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     target_pose = look_at_pose_service.response.new_cam_pose;
     return true;
   }
+
+ protected:
+  // Server Client to use look at pose
+  ros::ServiceClient look_pose_client_;
+
+  // frame names for the frame to move and default "Up" frame
+  std::string ee_frame_;
+  std::string z_axis_up_frame_;
+  std::string target_frame_;
 };
 
 }  // namespace ee_focus

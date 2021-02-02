@@ -78,7 +78,6 @@ class EEFocus {
 
   // Store important frame names
   std::string ee_frame_;
-  std::string z_axis_up_frame_;
   std::string target_frame_;
 
   // loop rate

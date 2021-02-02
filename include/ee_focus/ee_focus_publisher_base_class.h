@@ -13,19 +13,13 @@ namespace ee_focus {
 class EEFPublisherBase {
  public:
   /* \brief Pluginlib requires an intializer instead of constructor  */
-  void initialize(ros::NodeHandle& nh,
-                  std::string ee_frame,
-                  std::string z_axis_up_frame,
-                  std::string target_frame,
-                  double loop_rate,
-                  std::string look_pose_server_name,
-                  std::string publish_topic_name) {
+  virtual void initialize(ros::NodeHandle& nh,
+                          double loop_rate,
+                          std::string publish_topic_name) {
     nh_ = nh;  // TODO does this do what I want it to do?
-    ee_frame_ = ee_frame;
-    z_axis_up_frame_ = z_axis_up_frame;
-    target_frame_ = target_frame;
     loop_rate_ = ros::Rate(loop_rate);
-
+    target_pose_pub_ =
+        nh_.advertise<geometry_msgs::PoseStamped>(publish_topic_name, 1, true);
     return;
   }
 
@@ -56,11 +50,7 @@ class EEFPublisherBase {
       geometry_msgs::PoseStamped& target_pose) = 0;
 
   // TODO we have them getters, but do we need to give them setters too or no?
-  ros::ServiceClient getLookPoseClient() { return look_pose_client_; }
   tf2_ros::Buffer& getTFBuffer() { return tf_buffer_; }
-  std::string getEEFrame() { return ee_frame_; }
-  std::string getZAxisUpFrame() { return z_axis_up_frame_; }
-  std::string getTargetFrame() { return target_frame_; }
 
   virtual ~EEFPublisherBase() { stop(); }
 
@@ -86,8 +76,6 @@ class EEFPublisherBase {
     return;
   }
 
-  // Server Client to use look at pose
-  ros::ServiceClient look_pose_client_;  // TODO move to superclass
   // Publisher to send poses to Servo Pose Tracking
   ros::Publisher target_pose_pub_;
   // node handle
@@ -95,10 +83,6 @@ class EEFPublisherBase {
   // tf listener
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
-  // frame names for the frame to move and default "Up" frame
-  std::string ee_frame_;         // TODO move to superclass
-  std::string z_axis_up_frame_;  // TODO move to superclass
-  std::string target_frame_;     // TODO move to superclass
   // loop rate
   ros::Rate loop_rate_;
   // Only continue publishing while this is true. Another thread can set this to
