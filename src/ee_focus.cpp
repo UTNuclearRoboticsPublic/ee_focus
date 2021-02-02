@@ -60,16 +60,12 @@ EEFocus::EEFocus(
 
   if (!nh_.getParam("ee_frame_name", ee_frame_))
     throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
-  if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_))
-    throw std::invalid_argument(
-        "Could not load parameter: 'gravity_frame_name'");
   if (!nh_.getParam("target_frame_name", target_frame_))
     throw std::invalid_argument(
         "Could not load parameter: 'target_frame_name'");
 
   nh_.param<double>("loop_rate", loop_rate, 50.0);
-  nh_.param<std::string>(
-      "look_at_pose_server_name", look_at_pose_server_name, "/look_at_pose");
+
   nh_.param<std::string>(
       "target_pose_publish_topic", target_pose_publish_topic, "target_pose");
 
@@ -83,13 +79,8 @@ EEFocus::EEFocus(
   try {
     target_pose_publisher_ =
         ee_focus_loader.createInstance("ee_focus::UnconstrainedCameraPointer");
-    target_pose_publisher_->initialize(nh_,
-                                       ee_frame_,
-                                       z_axis_up_frame_,
-                                       target_frame_,
-                                       loop_rate,
-                                       look_at_pose_server_name,
-                                       target_pose_publish_topic);
+    target_pose_publisher_->initialize(
+        nh_, loop_rate, target_pose_publish_topic);
   } catch (pluginlib::PluginlibException& ex) {
     ROS_ERROR("The plugin failed to load for some reason. Error: %s",
               ex.what());
