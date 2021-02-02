@@ -16,7 +16,7 @@ class EEFPublisherBase {
   virtual void initialize(ros::NodeHandle& nh,
                           double loop_rate,
                           std::string publish_topic_name) {
-    nh_ = nh;  // TODO does this do what I want it to do?
+    nh_ = ros::NodeHandle(nh);
     loop_rate_ = ros::Rate(loop_rate);
     target_pose_pub_ =
         nh_.advertise<geometry_msgs::PoseStamped>(publish_topic_name, 1, true);
@@ -36,8 +36,6 @@ class EEFPublisherBase {
   virtual void stop() {
     continue_publishing_ = false;
 
-    // Too many horror stories of problems caused by leaving out brackets,
-    // sorry :)
     if (thread_.joinable()) {
       thread_.join();
     }
@@ -49,7 +47,6 @@ class EEFPublisherBase {
   virtual const bool poseCalulation(
       geometry_msgs::PoseStamped& target_pose) = 0;
 
-  // TODO we have them getters, but do we need to give them setters too or no?
   tf2_ros::Buffer& getTFBuffer() { return tf_buffer_; }
 
   virtual ~EEFPublisherBase() { stop(); }
