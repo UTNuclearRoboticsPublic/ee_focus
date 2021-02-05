@@ -8,6 +8,8 @@
 #include <atomic>
 #include <thread>
 
+
+// TODO - do start() and stop() need to be virtual? Or can we force that behavoir on the user? When would what we already have not be the desired behavior while also not going out of scope fo the code?
 namespace ee_focus {
 
 class EEFPublisherBase {
@@ -63,7 +65,7 @@ class EEFPublisherBase {
     while (ros::ok() && continue_publishing_) {
       // Do the bulk of the calculation
       if (poseCalulation(target_pose)) {
-        target_pose.header.stamp = ros::Time::now();
+        target_pose.header.stamp = ros::Time::now(); 
         target_pose_pub_.publish(target_pose);
       }
 
