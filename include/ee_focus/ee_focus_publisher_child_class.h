@@ -1,15 +1,11 @@
 #pragma once
 
 #include <ee_focus/ee_focus_publisher_base_class.h>
+#include <look_at_pose/LookAtPose.h>
 
-// TODO talk about how much freedom we really need to give the user before they
-// just get lost
-// TODO why is look_at_pose not a class var like the xxx_frames_?
 // TODO you need to explain how you call the base class init function inside the
 // child class init function - thats wild
 // TODO does posecalc need to be public so we can inherit it easily?
-// TODO why didnt you make  target_look_pose a class var to avoid repeated
-// declaration in the loop? and gravity? Why some but not others?
 
 namespace ee_focus {
 
@@ -62,31 +58,32 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     }
 
     // Convert the transform for the gravity frame to a rotation matrix
-    Eigen::Quaterniond q_gravity(ee_to_gravity_tf_.transform.rotation.w,
-                                 ee_to_gravity_tf_.transform.rotation.x,
-                                 ee_to_gravity_tf_.transform.rotation.y,
-                                 ee_to_gravity_tf_.transform.rotation.z);
-    Eigen::Matrix3d R_gravity = q_gravity.normalized().toRotationMatrix();
+    q_gravity_.w() = ee_to_gravity_tf_.transform.rotation.w;
+    q_gravity_.x() = ee_to_gravity_tf_.transform.rotation.x;
+    q_gravity_.y() = ee_to_gravity_tf_.transform.rotation.y;
+    q_gravity_.z() = ee_to_gravity_tf_.transform.rotation.z;
+    R_gravity_ = q_gravity_.normalized().toRotationMatrix();
 
     // Populate gravity vector as the z-axis of rotation matrix
-    geometry_msgs::Vector3Stamped gravity;
-    gravity.header.frame_id = ee_to_gravity_tf_.header.frame_id;
-    gravity.vector.x = R_gravity(0, 2);
-    gravity.vector.y = R_gravity(1, 2);
-    gravity.vector.z = R_gravity(2, 2);
+    gravity_.header.frame_id = ee_to_gravity_tf_.header.frame_id;
+    gravity_.vector.x = R_gravity_(0, 2);
+    gravity_.vector.y = R_gravity_(1, 2);
+    gravity_.vector.z = R_gravity_(2, 2);
 
     // Set the target pose in the EE frame using the found transformation
-    geometry_msgs::PoseStamped target_look_pose;
-    target_look_pose.header.frame_id = ee_to_target_tf_.header.frame_id;
-    target_look_pose.header.stamp = ee_to_target_tf_.header.stamp;
-    target_look_pose.pose.position.x = ee_to_target_tf_.transform.translation.x;
-    target_look_pose.pose.position.y = ee_to_target_tf_.transform.translation.y;
-    target_look_pose.pose.position.z = ee_to_target_tf_.transform.translation.z;
-    target_look_pose.pose.orientation = ee_to_target_tf_.transform.rotation;
+    target_look_pose_.header.frame_id = ee_to_target_tf_.header.frame_id;
+    target_look_pose_.header.stamp = ee_to_target_tf_.header.stamp;
+    target_look_pose_.pose.position.x =
+        ee_to_target_tf_.transform.translation.x;
+    target_look_pose_.pose.position.y =
+        ee_to_target_tf_.transform.translation.y;
+    target_look_pose_.pose.position.z =
+        ee_to_target_tf_.transform.translation.z;
+    target_look_pose_.pose.orientation = ee_to_target_tf_.transform.rotation;
 
     // Populate the look_at_pose service request
-    look_at_pose_service_.request.target_pose = target_look_pose;
-    look_at_pose_service_.request.up = gravity;
+    look_at_pose_service_.request.target_pose = target_look_pose_;
+    look_at_pose_service_.request.up = gravity_;
 
     // We need to update the time for the initial EE pose (identity)
     init_ee_pose_.header.stamp = ros::Time::now();
@@ -119,6 +116,10 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
   geometry_msgs::PoseStamped init_ee_pose_;
   geometry_msgs::TransformStamped ee_to_gravity_tf_;
   geometry_msgs::TransformStamped ee_to_target_tf_;
+  geometry_msgs::Vector3Stamped gravity_;
+  geometry_msgs::PoseStamped target_look_pose_;
+  Eigen::Quaterniond q_gravity_;
+  Eigen::Matrix3d R_gravity_;
 };
 
 }  // namespace ee_focus
