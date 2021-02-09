@@ -2,11 +2,14 @@
 
 #include <ee_focus/ee_focus_publisher_base_class.h>
 
-// TODO talk about how much freedom we really need to give the user before they just get lost
+// TODO talk about how much freedom we really need to give the user before they
+// just get lost
 // TODO why is look_at_pose not a class var like the xxx_frames_?
-// TODO you need to explain how you call the base class init function inside the child class init function - thats wild
+// TODO you need to explain how you call the base class init function inside the
+// child class init function - thats wild
 // TODO does posecalc need to be public so we can inherit it easily?
-// TODO why didnt you make  target_look_pose a class var to avoid repeated declaration in the loop? and gravity? Why some but not others?
+// TODO why didnt you make  target_look_pose a class var to avoid repeated
+// declaration in the loop? and gravity? Why some but not others?
 
 namespace ee_focus {
 
@@ -18,14 +21,14 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
                   double loop_rate,
                   std::string publish_topic_name) {
     // Load child-specific parameters
-    if (!nh.getParam("ee_frame_name", ee_frame_)){
+    if (!nh.getParam("ee_frame_name", ee_frame_)) {
       throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
     }
-    if (!nh.getParam("gravity_frame_name", z_axis_up_frame_)){
+    if (!nh.getParam("gravity_frame_name", z_axis_up_frame_)) {
       throw std::invalid_argument(
           "Could not load parameter: 'gravity_frame_name'");
     }
-    if (!nh.getParam("target_frame_name", target_frame_)){
+    if (!nh.getParam("target_frame_name", target_frame_)) {
       throw std::invalid_argument(
           "Could not load parameter: 'target_frame_name'");
     }

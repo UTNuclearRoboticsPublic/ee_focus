@@ -6,6 +6,8 @@ if(NOT "${CMAKE_CXX_STANDARD}")
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(FOCUS_LIBRARY_NAME ee_focus_plugins)
+
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   look_at_pose
@@ -25,18 +27,40 @@ generate_messages(
   std_msgs
 )
 
-catkin_package()
+catkin_package(
+  INCLUDE_DIRS
+    include
+  LIBRARIES
+    ${FOCUS_LIBRARY_NAME}
+)
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(ee_focus_plugins src/ee_focus_plugins.cpp)
+add_library(${FOCUS_LIBRARY_NAME}
+  src/ee_focus_plugins.cpp
+  src/ee_focus.cpp
+  include/${PROJECT_NAME}/ee_focus_publisher_base_class.h
+  include/${PROJECT_NAME}/ee_focus_publisher_child_class.h
+)
 
-add_executable(ee_focus src/ee_focus_main.cpp src/ee_focus.cpp src/ee_focus_publisher.cpp)
-target_link_libraries(ee_focus ${catkin_LIBRARIES})
+add_executable(ee_focus src/ee_focus_main.cpp)
+target_link_libraries(ee_focus ${catkin_LIBRARIES} ${FOCUS_LIBRARY_NAME})
 add_dependencies(ee_focus ${catkin_EXPORTED_TARGETS})
+
+##################
+## INSTALLATION ##
+##################
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
+install(TARGETS ${FOCUS_LIBRARY_NAME}
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
 
 install(PROGRAMS scripts/servo_starter.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
