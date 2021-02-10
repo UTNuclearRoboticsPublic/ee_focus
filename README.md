@@ -1,5 +1,9 @@
 # ee_focus
 
+# Devel
+See [the TODOs on the wiki](https://wikis.utexas.edu/display/NRG/EE+Focus+Notes) TODO remove this
+
+# Overview
 This uses MoveIt Servo's pose tracking feature to continuously point a EE frame at a target frame (in the robot URDF)
 
 Intended steps of use:
@@ -25,20 +29,6 @@ To launch from another launch file:
     <arg name="rotational_tolerance" value="0.05"/>
 </include>
 ```
-
-## Threading in this package
-The package must do a few things in parallel:
-  - Do all the math for figuring out the pose required to point the EE correctly (and publish the result)
-  - Run the pose tracking of MoveIt Servo - math for converting a pose to a velocity command
-  - Manage the I/O from ROS service callbacks
-  - Run MoveIt Servo (in the background, not managed here)
-
-There are 3 big objects/classes associated with these tasks:
-  1) MoveIt Servo Pose Tracking (not implemented here, just used)
-  2) `ee_focus_publisher` - relatively small class doing transform math, using `look_at_pose` service, and publishing target poses for MoveIt Servo Pose Tracking to move to
-  3) `ee_focus` - manages starting/stopping the Pose Tracking via ROS service, reading parameters, initializing things, etc
-
-The main thread of the executable will eventually be stuck in `EEFocus::spin()`, which is managing the MoveIt Servo Pose Tracking object. Starting/stopping tracking is handled via service callbacks with `EEFocus::startPointingCB` and `EEFocus::stopPointingCB`. The `EEFocusPublisher` object holds and manages its own thread where its math/publishing work will take place. Thus, when `EEFocus` tells `EEFocusPublisher` to start, the call returns instantly but kicks off a new thread with math/publishing work being done inside `EEFocusPublisher`
 
 ## Structure Overview
 
