@@ -27,13 +27,6 @@ class EEFPublisherBase {
     return;
   }
 
-  /**
-   * \brief Initializes the child class
-   * Any child-specific behavoir should be implemented there, in a function of
-   * the same name This automatically gets called on plugin initialize()
-   */
-  virtual void initialize_child(){};
-
   /* \brief Starts the publisher indefinitely */
   virtual void start() {
     continue_publishing_ = true;
@@ -65,6 +58,13 @@ class EEFPublisherBase {
  protected:
   /* \brief Pluginlib requires empty base class constructor  */
   EEFPublisherBase() : tf_buffer_(), tf_listener_(tf_buffer_), loop_rate_(10) {}
+
+  /**
+   * \brief Initializes the child class
+   * Any child-specific behavoir should be implemented there, in a function of
+   * the same name This automatically gets called on plugin initialize()
+   */
+  virtual void initialize_child(){};
 
   // node handle
   ros::NodeHandle nh_;
