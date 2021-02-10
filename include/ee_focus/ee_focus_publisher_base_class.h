@@ -7,9 +7,6 @@
 #include <atomic>
 #include <thread>
 
-// TODO - do start() and stop() need to be virtual? Or can we force that
-// behavoir on the user? When would what we already have not be the desired
-// behavior while also not going out of scope fo the code?
 namespace ee_focus {
 
 class EEFPublisherBase {
@@ -28,7 +25,9 @@ class EEFPublisherBase {
   }
 
   /* \brief Starts the publisher indefinitely */
-  virtual void start() {
+  void start() {
+    start_child();
+
     continue_publishing_ = true;
 
     thread_ = std::thread([this] { mainPubLoop(); });
@@ -37,7 +36,9 @@ class EEFPublisherBase {
   }
 
   /* \brief Stops the publisher */
-  virtual void stop() {
+  void stop() {
+    stop_child();
+
     continue_publishing_ = false;
 
     if (thread_.joinable()) {
@@ -62,9 +63,25 @@ class EEFPublisherBase {
   /**
    * \brief Initializes the child class
    * Any child-specific behavoir should be implemented there, in a function of
-   * the same name This automatically gets called on plugin initialize()
+   * the same name. This automatically gets called on plugin initialize()
    */
   virtual void initialize_child(){};
+
+  /**
+   * \brief Special starting behavoir for child class
+   * Any child-specific behavoir should be implemented there, in a function of
+   * the same name. This automatically gets called at the beginning of focus
+   * start()
+   */
+  virtual void start_child(){};
+
+  /**
+   * \brief Special stopping behavoir for child class
+   * Any child-specific behavoir should be implemented there, in a function of
+   * the same name. This automatically gets called at the beginning of focus
+   * stop()
+   */
+  virtual void stop_child(){};
 
   // node handle
   ros::NodeHandle nh_;
