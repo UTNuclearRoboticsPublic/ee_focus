@@ -3,8 +3,6 @@
 #include <ee_focus/ee_focus_publisher_base_class.h>
 #include <look_at_pose/LookAtPose.h>
 
-// TODO you need to explain how you call the base class init function inside the
-// child class init function - thats wild
 // TODO does posecalc need to be public so we can inherit it easily?
 
 namespace ee_focus {
@@ -13,35 +11,30 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
  public:
   UnconstrainedCameraPointer() {}
 
-  void initialize(ros::NodeHandle& nh,
-                  double loop_rate,
-                  std::string publish_topic_name) {
+  void initialize_child() {
     // Load child-specific parameters
-    if (!nh.getParam("ee_frame_name", ee_frame_)) {
+    if (!nh_.getParam("ee_frame_name", ee_frame_)) {
       throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
     }
-    if (!nh.getParam("gravity_frame_name", z_axis_up_frame_)) {
+    if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_)) {
       throw std::invalid_argument(
           "Could not load parameter: 'gravity_frame_name'");
     }
-    if (!nh.getParam("target_frame_name", target_frame_)) {
+    if (!nh_.getParam("target_frame_name", target_frame_)) {
       throw std::invalid_argument(
           "Could not load parameter: 'target_frame_name'");
     }
 
     // Set up look_at_pose service client
     std::string look_at_pose_server_name;
-    nh.param<std::string>(
+    nh_.param<std::string>(
         "look_at_pose_server_name", look_at_pose_server_name, "/look_at_pose");
     look_pose_client_ =
-        nh.serviceClient<look_at_pose::LookAtPose>(look_at_pose_server_name);
+        nh_.serviceClient<look_at_pose::LookAtPose>(look_at_pose_server_name);
 
     // The initial EE pose is always identity in the EE frame
     init_ee_pose_.header.frame_id = ee_frame_;
     init_ee_pose_.pose.orientation.w = 1;
-
-    // Call base class init function
-    EEFPublisherBase::initialize(nh, loop_rate, publish_topic_name);
   }
 
   /* \brief Where all the work to calculate unconstrained camera pose happens */

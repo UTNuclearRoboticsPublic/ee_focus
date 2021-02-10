@@ -15,15 +15,24 @@ namespace ee_focus {
 class EEFPublisherBase {
  public:
   /* \brief Pluginlib requires an intializer instead of constructor  */
-  virtual void initialize(ros::NodeHandle& nh,
-                          double loop_rate,
-                          std::string publish_topic_name) {
+  void initialize(ros::NodeHandle& nh,
+                  double loop_rate,
+                  std::string publish_topic_name) {
     nh_ = ros::NodeHandle(nh);
     loop_rate_ = ros::Rate(loop_rate);
     target_pose_pub_ =
         nh_.advertise<geometry_msgs::PoseStamped>(publish_topic_name, 1, true);
+
+    initialize_child();
     return;
   }
+
+  /**
+   * \brief Initializes the child class
+   * Any child-specific behavoir should be implemented there, in a function of
+   * the same name This automatically gets called on plugin initialize()
+   */
+  virtual void initialize_child(){};
 
   /* \brief Starts the publisher indefinitely */
   virtual void start() {
@@ -57,6 +66,14 @@ class EEFPublisherBase {
   /* \brief Pluginlib requires empty base class constructor  */
   EEFPublisherBase() : tf_buffer_(), tf_listener_(tf_buffer_), loop_rate_(10) {}
 
+  // node handle
+  ros::NodeHandle nh_;
+  // tf listener
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
+  // loop rate
+  ros::Rate loop_rate_;
+
  private:
   /* \brief Where generic publishing infrastructure is implemented  */
   void mainPubLoop() {
@@ -77,13 +94,6 @@ class EEFPublisherBase {
 
   // Publisher to send poses to Servo Pose Tracking
   ros::Publisher target_pose_pub_;
-  // node handle
-  ros::NodeHandle nh_;
-  // tf listener
-  tf2_ros::Buffer tf_buffer_;
-  tf2_ros::TransformListener tf_listener_;
-  // loop rate
-  ros::Rate loop_rate_;
   // Only continue publishing while this is true. Another thread can set this to
   // false and stop publishing
   std::atomic<bool> continue_publishing_{false};
