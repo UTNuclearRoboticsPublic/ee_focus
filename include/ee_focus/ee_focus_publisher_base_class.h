@@ -49,7 +49,7 @@ class EEFPublisherBase {
   }
 
   /* \brief Where all the work to calculate the desired pose is done  */
-  virtual const bool poseCalulation(
+  virtual const bool poseCalculation(
       geometry_msgs::PoseStamped& target_pose) = 0;
 
   tf2_ros::Buffer& getTFBuffer() { return tf_buffer_; }
@@ -98,7 +98,7 @@ class EEFPublisherBase {
     // Keep going until ROS dies or stop requested
     while (ros::ok() && continue_publishing_) {
       // Do the bulk of the calculation
-      if (poseCalulation(target_pose)) {
+      if (poseCalculation(target_pose)) {
         target_pose.header.stamp = ros::Time::now();
         target_pose_pub_.publish(target_pose);
       }

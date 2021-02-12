@@ -38,7 +38,7 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
   }
 
   /* \brief Where all the work to calculate unconstrained camera pose happens */
-  const bool poseCalulation(geometry_msgs::PoseStamped& target_pose) {
+  const bool poseCalculation(geometry_msgs::PoseStamped& target_pose) {
     // Look up the current transforms
     try {
       ee_to_gravity_tf_ = getTFBuffer().lookupTransform(
