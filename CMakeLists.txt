@@ -17,10 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
 )
 
-add_service_files(
-  FILES
-  PointToPose.srv
-)
 
 generate_messages(
   DEPENDENCIES
