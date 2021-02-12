@@ -32,7 +32,6 @@
 
 #pragma once
 
-#include <ee_focus/ee_focus_publisher.h>
 #include <ee_focus/ee_focus_publisher_base_class.h>
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
