@@ -40,7 +40,6 @@ include_directories(
 )
 
 add_library(${FOCUS_LIBRARY_NAME}
-  src/ee_focus_plugins.cpp
   src/ee_focus.cpp
   include/${PROJECT_NAME}/ee_focus_publisher_base_class.h
   include/${PROJECT_NAME}/ee_focus_publisher_child_class.h
