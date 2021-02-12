@@ -52,10 +52,7 @@ class EEFPublisherBase {
     return;
   }
 
-  /* \brief Where all the work to calculate the desired pose is done  */
-  virtual const bool poseCalculation(
-      geometry_msgs::PoseStamped& target_pose) = 0;
-
+  
   tf2_ros::Buffer& getTFBuffer() { return tf_buffer_; }
 
   virtual ~EEFPublisherBase() { stop(); }
@@ -63,6 +60,10 @@ class EEFPublisherBase {
  protected:
   /* \brief Pluginlib requires empty base class constructor  */
   EEFPublisherBase() : tf_buffer_(), tf_listener_(tf_buffer_), loop_rate_(10) {}
+
+  /* \brief Where all the work to calculate the desired pose is done  */
+  virtual const bool poseCalculation(
+      geometry_msgs::PoseStamped& target_pose) = 0;
 
   /**
    * \brief Initializes the child class
