@@ -22,7 +22,9 @@ class EEFPublisherBase {
 
     // Load general parent parameters
     if (!nh_.getParam("ee_frame_name", ee_frame_)) {
-      throw std::invalid_argument("Could not load parameter: 'ee_frame_name'"); // TODO should we use ROS_ERROR instead?
+      throw std::invalid_argument(
+          "Could not load parameter: 'ee_frame_name'");  // TODO should we use
+                                                         // ROS_ERROR instead?
     }
     initialize_child();
     return;
@@ -52,7 +54,6 @@ class EEFPublisherBase {
     return;
   }
 
-  
   tf2_ros::Buffer& getTFBuffer() { return tf_buffer_; }
 
   virtual ~EEFPublisherBase() { stop(); }
@@ -97,7 +98,7 @@ class EEFPublisherBase {
   ros::Rate loop_rate_;
 
   // End effector frame name
-   std::string ee_frame_;
+  std::string ee_frame_;
 
  private:
   /* \brief Where generic publishing infrastructure is implemented  */

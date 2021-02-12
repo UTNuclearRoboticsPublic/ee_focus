@@ -58,7 +58,7 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     q_gravity.z() = ee_to_gravity_tf.transform.rotation.z;
     R_gravity = q_gravity.normalized().toRotationMatrix();
 
-     geometry_msgs::Vector3Stamped gravity;
+    geometry_msgs::Vector3Stamped gravity;
     // Populate gravity vector as the z-axis of rotation matrix
     gravity.header.frame_id = ee_to_gravity_tf.header.frame_id;
     gravity.vector.x = R_gravity(0, 2);
@@ -69,12 +69,9 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
     // Set the target pose in the EE frame using the found transformation
     target_look_pose.header.frame_id = ee_to_target_tf.header.frame_id;
     target_look_pose.header.stamp = ee_to_target_tf.header.stamp;
-    target_look_pose.pose.position.x =
-        ee_to_target_tf.transform.translation.x;
-    target_look_pose.pose.position.y =
-        ee_to_target_tf.transform.translation.y;
-    target_look_pose.pose.position.z =
-        ee_to_target_tf.transform.translation.z;
+    target_look_pose.pose.position.x = ee_to_target_tf.transform.translation.x;
+    target_look_pose.pose.position.y = ee_to_target_tf.transform.translation.y;
+    target_look_pose.pose.position.z = ee_to_target_tf.transform.translation.z;
     target_look_pose.pose.orientation = ee_to_target_tf.transform.rotation;
 
     look_at_pose::LookAtPose look_at_pose_service;
@@ -108,9 +105,8 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
 
   // Some objects used in the main loop
   // Declare here to avoid constant allocation while running
-  
+
   geometry_msgs::PoseStamped init_ee_pose_;
-  
 };
 
 }  // namespace ee_focus
