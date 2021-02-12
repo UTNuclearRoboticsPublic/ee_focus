@@ -45,7 +45,7 @@ add_library(${FOCUS_LIBRARY_NAME}
   include/${PROJECT_NAME}/ee_focus_publisher_child_class.h
 )
 
-add_executable(ee_focus src/ee_focus_main.cpp)
+add_executable(ee_focus src/ee_focus_node.cpp)
 target_link_libraries(ee_focus ${catkin_LIBRARIES} ${FOCUS_LIBRARY_NAME})
 add_dependencies(ee_focus ${catkin_EXPORTED_TARGETS})
 
