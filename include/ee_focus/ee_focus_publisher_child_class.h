@@ -13,9 +13,6 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
 
   void initialize_child() {
     // Load child-specific parameters
-    if (!nh_.getParam("ee_frame_name", ee_frame_)) {
-      throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
-    }
     if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_)) {
       throw std::invalid_argument(
           "Could not load parameter: 'gravity_frame_name'");
@@ -99,7 +96,6 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
   ros::ServiceClient look_pose_client_;
 
   // frame names for the frame to move and default "Up" frame
-  std::string ee_frame_;
   std::string z_axis_up_frame_;
   std::string target_frame_;
 

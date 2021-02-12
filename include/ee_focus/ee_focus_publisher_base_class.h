@@ -20,6 +20,10 @@ class EEFPublisherBase {
     target_pose_pub_ =
         nh_.advertise<geometry_msgs::PoseStamped>(publish_topic_name, 1, true);
 
+    // Load general parent parameters
+    if (!nh_.getParam("ee_frame_name", ee_frame_)) {
+      throw std::invalid_argument("Could not load parameter: 'ee_frame_name'"); // TODO should we use ROS_ERROR instead?
+    }
     initialize_child();
     return;
   }
@@ -90,6 +94,9 @@ class EEFPublisherBase {
   tf2_ros::TransformListener tf_listener_;
   // loop rate
   ros::Rate loop_rate_;
+
+  // End effector frame name
+   std::string ee_frame_;
 
  private:
   /* \brief Where generic publishing infrastructure is implemented  */
