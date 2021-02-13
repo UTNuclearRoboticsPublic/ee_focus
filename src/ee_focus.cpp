@@ -61,6 +61,10 @@ EEFocus::EEFocus(
   std::string look_at_pose_server_name, target_pose_publish_topic;
   double loop_rate;
 
+  std::string plugin_name;
+  if (!nh_.getParam("plugin_name", plugin_name)) {
+    throw std::invalid_argument("Could not load parameter: 'plugin_name'");
+  }
   if (!nh_.getParam("ee_frame_name", ee_frame_)) {
     throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
   }
@@ -82,8 +86,7 @@ EEFocus::EEFocus(
       "ee_focus", "ee_focus::EEFPublisherBase");
 
   try {
-    target_pose_publisher_ =
-        ee_focus_loader.createInstance("ee_focus::UnconstrainedCameraPointer");
+    target_pose_publisher_ = ee_focus_loader.createInstance(plugin_name);
     target_pose_publisher_->initialize(
         nh_, loop_rate, target_pose_publish_topic);
   } catch (pluginlib::PluginlibException& ex) {
