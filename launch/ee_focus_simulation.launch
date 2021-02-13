@@ -16,6 +16,6 @@
     </include>
     
     <!-- NODE TO RUN EE FOCUS DEMO -->
-    <include file="$(find ee_focus)/launch/ee_focus_demo.launch"/>
+    <include file="$(find ee_focus)/launch/ee_focus.launch"/>
 
 </launch>
