@@ -61,11 +61,13 @@ EEFocus::EEFocus(
   std::string look_at_pose_server_name, target_pose_publish_topic;
   double loop_rate;
 
-  if (!nh_.getParam("ee_frame_name", ee_frame_))
+  if (!nh_.getParam("ee_frame_name", ee_frame_)) {
     throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
-  if (!nh_.getParam("target_frame_name", target_frame_))
+  }
+  if (!nh_.getParam("target_frame_name", target_frame_)) {
     throw std::invalid_argument(
         "Could not load parameter: 'target_frame_name'");
+  }
 
   nh_.param<double>("loop_rate", loop_rate, 50.0);
 
@@ -146,14 +148,19 @@ void EEFocus::spin() {
 }
 
 bool EEFocus::start() {
-  // Make all linear dimensions drift
+  // Sorry not sorry im using a vector of bool?
+  std::vector<bool> drift_dimensions;
+  if (!nh_.getParam("drift_dimensions", drift_dimensions)) {
+    throw std::invalid_argument("Could not load parameter: 'drift_dimensions'");
+  }
+
   moveit_msgs::ChangeDriftDimensions drift_serv;
-  drift_serv.request.drift_x_translation = true;
-  drift_serv.request.drift_y_translation = true;
-  drift_serv.request.drift_z_translation = true;
-  drift_serv.request.drift_x_rotation = false;
-  drift_serv.request.drift_y_rotation = false;
-  drift_serv.request.drift_z_rotation = false;
+  drift_serv.request.drift_x_translation = drift_dimensions[0];
+  drift_serv.request.drift_y_translation = drift_dimensions[1];
+  drift_serv.request.drift_z_translation = drift_dimensions[2];
+  drift_serv.request.drift_x_rotation = drift_dimensions[3];
+  drift_serv.request.drift_y_rotation = drift_dimensions[4];
+  drift_serv.request.drift_z_rotation = drift_dimensions[5];
 
   if (!drift_dims_client_.call(drift_serv)) {
     ROS_ERROR_STREAM("NO RESPONSE FROM: drift dimensions server");

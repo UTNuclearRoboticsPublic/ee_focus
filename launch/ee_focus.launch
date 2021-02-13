@@ -6,7 +6,7 @@
   <arg name="target_frame_name" default="demo_frame" />
   <arg name="loop_rate" default="50" /> <!-- hz -->
   <arg name="rotational_tolerance" default="0.05" /> <!-- radians -->
-
+  
   <arg name="look_at_pose_server_name" default="/look_at_pose" />
   <arg name="target_pose_publish_topic" default="target_pose" />
 
@@ -27,6 +27,10 @@
     <param name="rotational_tolerance" type="double" value="$(arg rotational_tolerance)" />
     <param name="look_at_pose_server_name" type="str" value="$(arg look_at_pose_server_name)" />
     <param name="target_pose_publish_topic" type="str" value="$(arg target_pose_publish_topic)" />
+
+    <!-- Drift dimensions: drift_x/y/z_translation drift_x/y/z_rotation -->
+    <rosparam param="drift_dimensions">[true, true, true, false, false, false]</rosparam>
+
   </node>
 
 </launch>
