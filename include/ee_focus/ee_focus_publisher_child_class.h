@@ -3,8 +3,6 @@
 #include <ee_focus/ee_focus_publisher_base_class.h>
 #include <look_at_pose/LookAtPose.h>
 
-// TODO does posecalc need to be public so we can inherit it easily?
-
 namespace ee_focus {
 
 class UnconstrainedCameraPointer : public EEFPublisherBase {
@@ -103,9 +101,7 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
   std::string z_axis_up_frame_;
   std::string target_frame_;
 
-  // Some objects used in the main loop
-  // Declare here to avoid constant allocation while running
-
+  // The initial camera pose is always the same: identity
   geometry_msgs::PoseStamped init_ee_pose_;
 };
 

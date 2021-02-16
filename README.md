@@ -1,8 +1,5 @@
 # ee_focus
 
-# Devel
-See [the TODOs on the wiki](https://wikis.utexas.edu/display/NRG/EE+Focus+Notes) TODO remove this
-
 # Overview
 This uses MoveIt Servo's pose tracking feature to continuously point a EE frame at a target frame (in the robot URDF)
 
@@ -11,7 +8,6 @@ Intended steps of use:
   2) Modify the copied launch file to load the correct Servo parameters
   3) Determine the inputs to the `ee_focus` (frame names, loop rate, etc)
   4) Launch and pass input args (see below). Alternatively, set the defaults args in your modified launch file to match your values
-
 
 ## Launching
 To launch from the command line:
@@ -29,7 +25,3 @@ To launch from another launch file:
     <arg name="rotational_tolerance" value="0.05"/>
 </include>
 ```
-
-## Structure Overview
-
-![Alt Text](EE_Focus.png)
