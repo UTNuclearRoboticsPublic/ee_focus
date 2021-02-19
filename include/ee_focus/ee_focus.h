@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include <ee_focus/ee_focus_publisher.h>
+#include <ee_focus/ee_focus_publisher_base_class.h>
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
 #include <ros/ros.h>
@@ -77,7 +77,6 @@ class EEFocus {
 
   // Store important frame names
   std::string ee_frame_;
-  std::string z_axis_up_frame_;
   std::string target_frame_;
 
   // loop rate
@@ -94,7 +93,7 @@ class EEFocus {
   std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
 
   // Also hold the target pose publisher
-  std::unique_ptr<ee_focus::EEFocusPublisher> target_pose_publisher_;
+  boost::shared_ptr<EEFPublisherBase> target_pose_publisher_;
 
   // Tolerances for when a move is "complete"
   double rotational_tolerance_;

@@ -31,6 +31,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ee_focus/ee_focus.h>
+#include <ee_focus/ee_focus_publisher_base_class.h>
+#include <ee_focus/ee_focus_publisher_child_class.h>
+#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_loader.h>
 
 #include <stdexcept>
 
@@ -57,18 +61,19 @@ EEFocus::EEFocus(
   std::string look_at_pose_server_name, target_pose_publish_topic;
   double loop_rate;
 
-  if (!nh_.getParam("ee_frame_name", ee_frame_))
+  std::string plugin_name;
+  if (!nh_.getParam("plugin_name", plugin_name)) {
+    throw std::invalid_argument("Could not load parameter: 'plugin_name'");
+  }
+  if (!nh_.getParam("ee_frame_name", ee_frame_)) {
     throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
-  if (!nh_.getParam("gravity_frame_name", z_axis_up_frame_))
-    throw std::invalid_argument(
-        "Could not load parameter: 'gravity_frame_name'");
-  if (!nh_.getParam("target_frame_name", target_frame_))
+  }
+  if (!nh_.getParam("target_frame_name", target_frame_)) {
     throw std::invalid_argument(
         "Could not load parameter: 'target_frame_name'");
+  }
 
   nh_.param<double>("loop_rate", loop_rate, 50.0);
-  nh_.param<std::string>(
-      "look_at_pose_server_name", look_at_pose_server_name, "/look_at_pose");
   nh_.param<std::string>(
       "target_pose_publish_topic", target_pose_publish_topic, "target_pose");
 
@@ -76,14 +81,17 @@ EEFocus::EEFocus(
   nh_.param<double>("rotational_tolerance", rotational_tolerance_, 0.0);
 
   // Set up the target pose publisher
-  target_pose_publisher_ =
-      std::make_unique<ee_focus::EEFocusPublisher>(nh_,
-                                                   ee_frame_,
-                                                   z_axis_up_frame_,
-                                                   target_frame_,
-                                                   loop_rate,
-                                                   look_at_pose_server_name,
-                                                   target_pose_publish_topic);
+  pluginlib::ClassLoader<ee_focus::EEFPublisherBase> ee_focus_loader(
+      "ee_focus", "ee_focus::EEFPublisherBase");
+
+  try {
+    target_pose_publisher_ = ee_focus_loader.createInstance(plugin_name);
+    target_pose_publisher_->initialize(
+        nh_, loop_rate, target_pose_publish_topic);
+  } catch (pluginlib::PluginlibException& ex) {
+    ROS_ERROR("The plugin failed to load for some reason. Error: %s",
+              ex.what());
+  }
 
   // Set loop rate
   loop_rate_ = ros::Rate(loop_rate);
@@ -142,14 +150,19 @@ void EEFocus::spin() {
 }
 
 bool EEFocus::start() {
-  // Make all linear dimensions drift
+  // Sorry not sorry im using a vector of bool?
+  std::vector<bool> drift_dimensions;
+  if (!nh_.getParam("drift_dimensions", drift_dimensions)) {
+    throw std::invalid_argument("Could not load parameter: 'drift_dimensions'");
+  }
+
   moveit_msgs::ChangeDriftDimensions drift_serv;
-  drift_serv.request.drift_x_translation = true;
-  drift_serv.request.drift_y_translation = true;
-  drift_serv.request.drift_z_translation = true;
-  drift_serv.request.drift_x_rotation = false;
-  drift_serv.request.drift_y_rotation = false;
-  drift_serv.request.drift_z_rotation = false;
+  drift_serv.request.drift_x_translation = drift_dimensions[0];
+  drift_serv.request.drift_y_translation = drift_dimensions[1];
+  drift_serv.request.drift_z_translation = drift_dimensions[2];
+  drift_serv.request.drift_x_rotation = drift_dimensions[3];
+  drift_serv.request.drift_y_rotation = drift_dimensions[4];
+  drift_serv.request.drift_z_rotation = drift_dimensions[5];
 
   if (!drift_dims_client_.call(drift_serv)) {
     ROS_ERROR_STREAM("NO RESPONSE FROM: drift dimensions server");
@@ -188,3 +201,6 @@ bool EEFocus::stop() {
   return true;
 }
 }  // namespace ee_focus
+
+PLUGINLIB_EXPORT_CLASS(ee_focus::UnconstrainedCameraPointer,
+                       ee_focus::EEFPublisherBase)
