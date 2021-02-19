@@ -17,7 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
 )
 
-
 generate_messages(
   DEPENDENCIES
   std_msgs

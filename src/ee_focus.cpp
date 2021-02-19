@@ -74,7 +74,6 @@ EEFocus::EEFocus(
   }
 
   nh_.param<double>("loop_rate", loop_rate, 50.0);
-
   nh_.param<std::string>(
       "target_pose_publish_topic", target_pose_publish_topic, "target_pose");
 
