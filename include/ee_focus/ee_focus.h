@@ -93,8 +93,7 @@ class EEFocus {
   std::unique_ptr<moveit_servo::PoseTracking> pose_tracking_;
 
   // Also hold the target pose publisher
-  // TODO remove namespace?
-  boost::shared_ptr<ee_focus::EEFPublisherBase> target_pose_publisher_;
+  boost::shared_ptr<EEFPublisherBase> target_pose_publisher_;
 
   // Tolerances for when a move is "complete"
   double rotational_tolerance_;

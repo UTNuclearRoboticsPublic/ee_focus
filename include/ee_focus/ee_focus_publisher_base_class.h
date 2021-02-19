@@ -22,9 +22,9 @@ class EEFPublisherBase {
 
     // Load general parent parameters
     if (!nh_.getParam("ee_frame_name", ee_frame_)) {
-      throw std::invalid_argument(
-          "Could not load parameter: 'ee_frame_name'");  // TODO should we use
-                                                         // ROS_ERROR instead?
+      ROS_ERROR_STREAM(
+          "Parameter 'ee_frame_name' must be set, but couldn't be got");
+      throw std::invalid_argument("Could not load parameter: 'ee_frame_name'");
     }
     initialize_child();
     return;
