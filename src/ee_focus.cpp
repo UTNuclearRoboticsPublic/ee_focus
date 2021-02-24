@@ -150,7 +150,6 @@ void EEFocus::spin() {
 }
 
 bool EEFocus::start() {
-  // Sorry not sorry im using a vector of bool?
   std::vector<bool> drift_dimensions;
   if (!nh_.getParam("drift_dimensions", drift_dimensions)) {
     throw std::invalid_argument("Could not load parameter: 'drift_dimensions'");
