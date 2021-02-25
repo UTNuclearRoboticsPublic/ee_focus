@@ -34,6 +34,7 @@ include_directories(
 
 add_library(${FOCUS_LIBRARY_NAME}
   src/ee_focus.cpp
+  src/ee_focus_default_plugins.cpp
   include/${PROJECT_NAME}/ee_focus_publisher_base_class.h
   include/${PROJECT_NAME}/unconstrained_camera_pointer.h
 )

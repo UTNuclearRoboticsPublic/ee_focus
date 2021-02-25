@@ -1,5 +1,7 @@
 <launch>
 
+    <arg name="plugin_name" default="ee_focus::UnconstrainedCameraPointer" />
+
     <!-- NODE TO RUN PHYSICAL SIMULATION -->
     <include file="$(find ee_focus)/launch/ur5.launch">
         <arg name="gui" value="false"/>
@@ -16,6 +18,8 @@
     </include>
     
     <!-- NODE TO RUN EE FOCUS DEMO -->
-    <include file="$(find ee_focus)/launch/ee_focus.launch"/>
+    <include file="$(find ee_focus)/launch/ee_focus.launch">
+        <arg name="plugin_name" value="$(arg plugin_name)"/>
+    </include>
 
 </launch>
