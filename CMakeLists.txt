@@ -9,17 +9,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(FOCUS_LIBRARY_NAME ee_focus_plugins)
 
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
   look_at_pose
-  message_generation
   moveit_servo
   std_srvs
   tf2
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
 )
 
 catkin_package(
@@ -27,6 +20,11 @@ catkin_package(
     include
   LIBRARIES
     ${FOCUS_LIBRARY_NAME}
+  CATKIN_DEPENDS
+    look_at_pose
+    moveit_servo
+    std_srvs
+    tf2
 )
 
 include_directories(
