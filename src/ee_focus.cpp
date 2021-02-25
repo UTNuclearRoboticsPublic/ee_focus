@@ -32,7 +32,6 @@
 
 #include <ee_focus/ee_focus.h>
 #include <ee_focus/ee_focus_publisher_base_class.h>
-#include <pluginlib/class_list_macros.h>
 #include <pluginlib/class_loader.h>
 
 #include <stdexcept>

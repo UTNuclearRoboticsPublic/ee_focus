@@ -107,5 +107,7 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
 
 }  // namespace ee_focus
 
+// Export the plugin
+#include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS(ee_focus::UnconstrainedCameraPointer,
                        ee_focus::EEFPublisherBase)
