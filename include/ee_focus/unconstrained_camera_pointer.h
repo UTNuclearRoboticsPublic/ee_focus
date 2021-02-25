@@ -106,3 +106,6 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
 };
 
 }  // namespace ee_focus
+
+PLUGINLIB_EXPORT_CLASS(ee_focus::UnconstrainedCameraPointer,
+                       ee_focus::EEFPublisherBase)
