@@ -10,9 +10,21 @@ set(FOCUS_LIBRARY_NAME ee_focus_plugins)
 
 find_package(catkin REQUIRED COMPONENTS
   look_at_pose
+  message_generation
   moveit_servo
+  std_msgs
   std_srvs
   tf2
+)
+
+add_service_files(
+  FILES
+  SetTargetFrame.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
 )
 
 catkin_package(

@@ -54,6 +54,11 @@ class EEFPublisherBase {
     return;
   }
 
+  /* \brief Sets the target frame  */
+  void setTargetFrame(const std::string new_target) {
+    target_frame_ = new_target;
+  }
+
   tf2_ros::Buffer& getTFBuffer() { return tf_buffer_; }
 
   virtual ~EEFPublisherBase() { stop(); }
@@ -97,8 +102,9 @@ class EEFPublisherBase {
   // loop rate
   ros::Rate loop_rate_;
 
-  // End effector frame name
+  // End effector frame name and target frame
   std::string ee_frame_;
+  std::string target_frame_;
 
  private:
   /* \brief Where generic publishing infrastructure is implemented  */
