@@ -15,10 +15,6 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
       throw std::invalid_argument(
           "Could not load parameter: 'gravity_frame_name'");
     }
-    if (!nh_.getParam("target_frame_name", target_frame_)) {
-      throw std::invalid_argument(
-          "Could not load parameter: 'target_frame_name'");
-    }
 
     // Set up look_at_pose service client
     std::string look_at_pose_server_name;
@@ -97,9 +93,8 @@ class UnconstrainedCameraPointer : public EEFPublisherBase {
   // Server Client to use look at pose
   ros::ServiceClient look_pose_client_;
 
-  // frame names for the frame to move and default "Up" frame
+  // frame name default "Up" frame
   std::string z_axis_up_frame_;
-  std::string target_frame_;
 
   // The initial camera pose is always the same: identity
   geometry_msgs::PoseStamped init_ee_pose_;

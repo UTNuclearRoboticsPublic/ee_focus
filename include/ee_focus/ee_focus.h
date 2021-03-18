@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <ee_focus/SetTargetFrame.h>
 #include <ee_focus/ee_focus_publisher_base_class.h>
 #include <moveit_servo/pose_tracking.h>
 #include <moveit_servo/servo.h>
@@ -65,9 +66,14 @@ class EEFocus {
   bool stopPointingCB(std_srvs::Trigger::Request& req,
                       std_srvs::Trigger::Response& res);
 
-  // Server's to start and end EE focusing
+  /* \brief Service callback for stopping */
+  bool setTargetFrameCB(ee_focus::SetTargetFrame::Request& req,
+                        ee_focus::SetTargetFrame::Response& res);
+
+  // Server's to start and end EE focusing and changing frames
   ros::ServiceServer start_pointing_server_;
   ros::ServiceServer stop_pointing_server_;
+  ros::ServiceServer change_target_frame_server_;
 
   // A client for changing the drift dimensions in Servo
   ros::ServiceClient drift_dims_client_;

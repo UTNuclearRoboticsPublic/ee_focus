@@ -32,8 +32,6 @@
 
 #include <ee_focus/ee_focus.h>
 #include <ee_focus/ee_focus_publisher_base_class.h>
-#include <ee_focus/ee_focus_publisher_child_class.h>
-#include <pluginlib/class_list_macros.h>
 #include <pluginlib/class_loader.h>
 
 #include <stdexcept>
@@ -56,9 +54,13 @@ EEFocus::EEFocus(
       ros::names::append(nh_.getNamespace(), "stop_ee_focus"),
       &EEFocus::stopPointingCB,
       this);
+  change_target_frame_server_ = nh_.advertiseService(
+      ros::names::append(nh_.getNamespace(), "set_target_frame"),
+      &EEFocus::setTargetFrameCB,
+      this);
 
   // Read instance specific parameters
-  std::string look_at_pose_server_name, target_pose_publish_topic;
+  std::string target_pose_publish_topic;
   double loop_rate;
 
   std::string plugin_name;
@@ -88,6 +90,7 @@ EEFocus::EEFocus(
     target_pose_publisher_ = ee_focus_loader.createInstance(plugin_name);
     target_pose_publisher_->initialize(
         nh_, loop_rate, target_pose_publish_topic);
+    target_pose_publisher_->setTargetFrame(target_frame_);
   } catch (pluginlib::PluginlibException& ex) {
     ROS_ERROR("The plugin failed to load for some reason. Error: %s",
               ex.what());
@@ -117,6 +120,15 @@ bool EEFocus::stopPointingCB(std_srvs::Trigger::Request& req,
   state_change_handled_ = false;
   res.success = true;
   res.message = "Stopping EE focusing";
+  return true;
+}
+
+bool EEFocus::setTargetFrameCB(ee_focus::SetTargetFrame::Request& req,
+                               ee_focus::SetTargetFrame::Response& res) {
+  target_frame_ = req.target_frame;
+  target_pose_publisher_->setTargetFrame(target_frame_);
+  res.success = true;
+  res.message = std::string("Set target frame to: ") + target_frame_;
   return true;
 }
 
@@ -200,6 +212,3 @@ bool EEFocus::stop() {
   return true;
 }
 }  // namespace ee_focus
-
-PLUGINLIB_EXPORT_CLASS(ee_focus::UnconstrainedCameraPointer,
-                       ee_focus::EEFPublisherBase)

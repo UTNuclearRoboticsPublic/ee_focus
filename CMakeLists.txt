@@ -9,12 +9,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(FOCUS_LIBRARY_NAME ee_focus_plugins)
 
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
   look_at_pose
   message_generation
   moveit_servo
+  std_msgs
   std_srvs
   tf2
+)
+
+add_service_files(
+  FILES
+  SetTargetFrame.srv
 )
 
 generate_messages(
@@ -27,6 +32,11 @@ catkin_package(
     include
   LIBRARIES
     ${FOCUS_LIBRARY_NAME}
+  CATKIN_DEPENDS
+    look_at_pose
+    moveit_servo
+    std_srvs
+    tf2
 )
 
 include_directories(
@@ -36,8 +46,9 @@ include_directories(
 
 add_library(${FOCUS_LIBRARY_NAME}
   src/ee_focus.cpp
+  src/ee_focus_default_plugins.cpp
   include/${PROJECT_NAME}/ee_focus_publisher_base_class.h
-  include/${PROJECT_NAME}/ee_focus_publisher_child_class.h
+  include/${PROJECT_NAME}/unconstrained_camera_pointer.h
 )
 
 add_executable(ee_focus src/ee_focus_node.cpp)
