@@ -50,6 +50,8 @@ add_library(${FOCUS_LIBRARY_NAME}
   include/${PROJECT_NAME}/ee_focus_publisher_base_class.h
   include/${PROJECT_NAME}/unconstrained_camera_pointer.h
 )
+target_link_libraries(${FOCUS_LIBRARY_NAME} ${catkin_LIBRARIES})
+add_dependencies(${FOCUS_LIBRARY_NAME} ${catkin_EXPORTED_TARGETS})
 
 add_executable(ee_focus src/ee_focus_node.cpp)
 target_link_libraries(ee_focus ${catkin_LIBRARIES} ${FOCUS_LIBRARY_NAME})
