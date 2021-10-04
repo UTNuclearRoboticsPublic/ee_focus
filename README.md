@@ -14,11 +14,11 @@ See the [EE Pose Customization](#EE-Pose-Customization) section for more detaile
 
 
 # Installation
-`ee_focus` heavily relies on [MoveIt Servo](https://github.com/ros-planning/moveit/tree/master/moveit_ros/moveit_servo), which is still under constant development. It is reccomended to [install MoveIt from source](https://moveit.ros.org/install/source/) to have the most current Servo version.
+`ee_focus` heavily relies on [MoveIt Servo](https://github.com/ros-planning/moveit/tree/master/moveit_ros/moveit_servo), which is still under constant development. You might consider [installing MoveIt from source](https://moveit.ros.org/install/source/) to have the most current Servo version.
 
 To get and build the required code, run:
 ```sh
-git clone https://github.com/UTNuclearRobotics/ee_focus.git
+git clone https://github.com/UTNuclearRoboticsPublic/ee_focus.git
 git clone https://github.com/UTNuclearRoboticsPublic/look_at_pose.git
 rosdep install --from-paths . --ignore-src -y
 catkin build
@@ -54,11 +54,9 @@ This call should move the arm to point the EE at the `/demo_frame` from above. I
 
 `ee_focus` handles the interface with MoveIt Servo's `PoseTracking`, which needs a target pose as an input. The calculation of this pose is customizable via plugins. You might want to maintain a specified distance, viewing angle, or something else entirely use-case specific. The below diagram is a high level overview of the components of `ee_focus`, including the customizable part.
 
-![alt text](ee_focus.png)
+![alt text](doc/ee_focus.png)
 
 ## Writing your custom pose calculator
-An example with trivial implementation that shows off the full customization of `ee_focus` may be found at TODO.
-
 To write your own plugin, you will need to inherit from `ee_focus::EEFPublisherBase`. Your child class will need to interact in some required ways:
 
 1) Have an empty constructor that takes no args. This is a pluginlib requirement
